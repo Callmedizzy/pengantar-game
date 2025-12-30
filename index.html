@@ -1,0 +1,2116 @@
+<!DOCTYPE html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Penjaga Ladang - RPG Bertani Bertahan</title>
+    <style>
+      @import url("https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;600;700&family=Changa+One&display=swap");
+
+      :root {
+        --ink: #2b1a0a;
+        --cream: #fff3da;
+        --wood: #e0a46a;
+        --wood-dark: #b56c33;
+        --wood-shadow: #7b4a24;
+        --grass: #8ccc63;
+        --grass-dark: #5a9a3a;
+        --sky: #8fd5ff;
+        --sky-deep: #5db5ff;
+        --panel: rgba(255, 255, 255, 0.92);
+        --shadow: 0 20px 40px rgba(30, 20, 10, 0.22);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        font-family: "Baloo 2", "Trebuchet MS", sans-serif;
+        color: var(--ink);
+        background: radial-gradient(circle at 10% 12%, rgba(255, 255, 255, 0.7), transparent 32%),
+          radial-gradient(circle at 82% 18%, rgba(255, 255, 255, 0.6), transparent 30%),
+          linear-gradient(180deg, var(--sky) 0%, #cfe9ff 42%, #f6e4c6 100%);
+        min-height: 100vh;
+        padding: 32px 24px 48px;
+        background-attachment: fixed;
+      }
+
+      body::before,
+      body::after {
+        content: "";
+        position: fixed;
+        z-index: -1;
+        border-radius: 50%;
+        opacity: 0.5;
+      }
+
+      body::before {
+        width: 420px;
+        height: 240px;
+        background: radial-gradient(circle, rgba(255, 255, 255, 0.9), transparent 70%);
+        top: -90px;
+        right: 10%;
+      }
+
+      body::after {
+        width: 360px;
+        height: 220px;
+        background: radial-gradient(circle, rgba(255, 255, 255, 0.75), transparent 70%);
+        bottom: -90px;
+        left: 8%;
+      }
+
+      .app {
+        max-width: 1200px;
+        margin: 0 auto;
+      }
+
+      header.hero {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 24px;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 28px;
+        padding: 24px;
+        border-radius: 24px;
+        background: linear-gradient(180deg, #f2c98b 0%, #e4a863 55%, #d28a4a 100%);
+        border: 2px solid var(--wood-shadow);
+        box-shadow: var(--shadow), inset 0 2px 0 rgba(255, 255, 255, 0.4);
+        animation: floatIn 0.8s ease;
+        position: relative;
+        overflow: hidden;
+      }
+
+      header.hero::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: repeating-linear-gradient(
+          90deg,
+          rgba(255, 255, 255, 0.12) 0,
+          rgba(255, 255, 255, 0.12) 8px,
+          transparent 8px,
+          transparent 16px
+        );
+        opacity: 0.35;
+        pointer-events: none;
+      }
+
+      .hero h1 {
+        font-family: "Changa One", "Trebuchet MS", sans-serif;
+        font-size: clamp(2.6rem, 3.2vw, 3.6rem);
+        margin: 6px 0;
+        letter-spacing: 1px;
+        color: #4f2f14;
+        text-shadow: 0 3px 0 rgba(255, 255, 255, 0.35);
+      }
+
+      .eyebrow {
+        text-transform: uppercase;
+        font-size: 0.8rem;
+        letter-spacing: 2px;
+        color: #4f2f14;
+        margin: 0;
+        padding: 6px 12px;
+        display: inline-block;
+        background: rgba(255, 255, 255, 0.35);
+        border-radius: 999px;
+        border: 1px solid rgba(120, 75, 32, 0.4);
+      }
+
+      .subtitle {
+        margin: 0;
+        max-width: 520px;
+        color: #4a2e18;
+      }
+
+      .meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+      }
+
+      .chip {
+        padding: 8px 14px;
+        border-radius: 999px;
+        background: var(--cream);
+        border: 2px solid rgba(160, 98, 45, 0.6);
+        font-size: 0.95rem;
+        font-weight: 700;
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7);
+      }
+
+      main.grid {
+        display: grid;
+        grid-template-columns: minmax(280px, 1.3fr) minmax(260px, 0.9fr);
+        gap: 24px;
+      }
+
+      .board-card {
+        padding: 20px;
+        border-radius: 24px;
+        background: rgba(255, 255, 255, 0.75);
+        border: 2px solid rgba(123, 74, 36, 0.4);
+        box-shadow: var(--shadow);
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+        animation: floatIn 1s ease;
+      }
+
+      .canvas-wrap {
+        position: relative;
+        padding: 12px;
+        border-radius: 20px;
+        background: linear-gradient(180deg, #f7d2a0 0%, #e7ae72 100%);
+        border: 3px solid #7b4a24;
+        box-shadow: inset 0 2px 0 rgba(255, 255, 255, 0.5);
+      }
+
+      .scene-tag {
+        position: absolute;
+        top: 10px;
+        left: 50%;
+        transform: translateX(-50%);
+        padding: 6px 18px;
+        background: rgba(35, 35, 50, 0.85);
+        color: #fff4d6;
+        border-radius: 999px;
+        border: 2px solid rgba(255, 255, 255, 0.35);
+        font-family: "Changa One", "Trebuchet MS", sans-serif;
+        letter-spacing: 1px;
+        font-size: 0.95rem;
+        text-shadow: 0 2px 0 rgba(0, 0, 0, 0.3);
+      }
+
+      canvas {
+        width: 100%;
+        height: auto;
+        border-radius: 14px;
+        border: 4px solid #5f3619;
+        background: linear-gradient(180deg, #9bd8ff 0%, #cfe7c5 48%, #9c6a3b 100%);
+        box-shadow: inset 0 0 18px rgba(0, 0, 0, 0.2);
+      }
+
+      .board-footer {
+        display: flex;
+        justify-content: space-between;
+        font-weight: 600;
+        color: #4f2f14;
+        gap: 12px;
+        flex-wrap: wrap;
+      }
+
+      .board-footer div {
+        padding: 6px 12px;
+        border-radius: 12px;
+        background: rgba(255, 255, 255, 0.8);
+        border: 1px solid rgba(160, 98, 45, 0.45);
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7);
+      }
+
+      aside.panel {
+        padding: 20px;
+        border-radius: 24px;
+        background: linear-gradient(180deg, rgba(255, 255, 255, 0.95), rgba(248, 222, 185, 0.9));
+        border: 2px solid rgba(123, 74, 36, 0.35);
+        box-shadow: var(--shadow);
+        display: flex;
+        flex-direction: column;
+        gap: 18px;
+        animation: floatIn 1.1s ease;
+      }
+
+      .panel-section {
+        padding: 16px;
+        border-radius: 18px;
+        background: rgba(255, 255, 255, 0.85);
+        border: 2px solid rgba(209, 154, 99, 0.6);
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7);
+      }
+
+      .panel-section h2 {
+        font-size: 1.05rem;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        margin: 0 0 12px;
+        color: #5b3518;
+        font-family: "Changa One", "Trebuchet MS", sans-serif;
+      }
+
+      .button-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+      }
+
+      button {
+        font-family: inherit;
+        border: none;
+        padding: 10px 14px;
+        border-radius: 12px;
+        background: linear-gradient(180deg, #f2c98b 0%, #e6a35a 100%);
+        color: #3b240f;
+        font-weight: 600;
+        cursor: pointer;
+        transition: transform 0.15s ease, box-shadow 0.2s ease;
+        box-shadow: 0 10px 18px rgba(118, 78, 49, 0.2);
+        border: 2px solid rgba(120, 70, 32, 0.5);
+      }
+
+      button:hover {
+        transform: translateY(-1px);
+      }
+
+      button:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+        box-shadow: none;
+        transform: none;
+      }
+
+      .secondary {
+        background: linear-gradient(180deg, #d8e8b2 0%, #b6d088 100%);
+      }
+
+      .danger {
+        background: linear-gradient(180deg, #f07f6a 0%, #d45b46 100%);
+        color: #fff8ef;
+      }
+
+      .plant-list {
+        display: grid;
+        gap: 10px;
+      }
+
+      .plant-btn {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        background: linear-gradient(180deg, #fff5df 0%, #f2d2a6 100%);
+        border: 2px solid rgba(123, 74, 36, 0.35);
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6);
+      }
+
+      .plant-btn.active {
+        border: 2px solid #3a7bd5;
+        box-shadow: 0 12px 22px rgba(58, 123, 213, 0.2);
+      }
+
+      .plant-name {
+        font-weight: 700;
+        margin-bottom: 2px;
+      }
+
+      .plant-cost {
+        font-size: 0.85rem;
+        color: #70543a;
+      }
+
+      .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(120px, 1fr));
+        gap: 8px 12px;
+        font-size: 0.9rem;
+      }
+
+      .stats-grid span {
+        font-weight: 700;
+      }
+
+      .hidden {
+        display: none;
+      }
+
+      .control-list {
+        display: grid;
+        gap: 6px;
+        font-size: 0.88rem;
+      }
+
+      .log {
+        max-height: 160px;
+        overflow: auto;
+        display: grid;
+        gap: 6px;
+        font-size: 0.86rem;
+        color: #5f4630;
+      }
+
+      .log div {
+        padding: 6px 8px;
+        background: rgba(255, 255, 255, 0.9);
+        border-radius: 10px;
+        border: 1px solid rgba(120, 70, 32, 0.25);
+      }
+
+      .overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(20, 14, 8, 0.5);
+        display: grid;
+        place-items: center;
+        padding: 24px;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.3s ease;
+      }
+
+      .overlay.show {
+        opacity: 1;
+        pointer-events: auto;
+      }
+
+      .overlay-card {
+        background: linear-gradient(180deg, #fff3da 0%, #f1cfa4 100%);
+        padding: 24px;
+        border-radius: 20px;
+        max-width: 520px;
+        width: 100%;
+        box-shadow: var(--shadow);
+        border: 2px solid rgba(123, 74, 36, 0.5);
+        display: grid;
+        gap: 16px;
+      }
+
+      .overlay-card h3 {
+        margin: 0;
+        font-family: "Changa One", "Trebuchet MS", sans-serif;
+        font-size: 1.8rem;
+      }
+
+      .overlay-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+      }
+
+      .char-grid {
+        display: grid;
+        gap: 10px;
+      }
+
+      .char-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 8px 10px;
+        border-radius: 12px;
+        background: rgba(255, 255, 255, 0.7);
+        border: 1px solid rgba(100, 70, 40, 0.12);
+      }
+
+      .char-item button {
+        padding: 6px 10px;
+        font-size: 0.85rem;
+      }
+
+      @keyframes floatIn {
+        from {
+          opacity: 0;
+          transform: translateY(16px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      @media (max-width: 980px) {
+        main.grid {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="app">
+      <header class="hero">
+        <div class="title-block">
+          <p class="eyebrow">RPG - Pertahanan Menara - Bertani</p>
+          <h1>Penjaga Ladang</h1>
+          <p class="subtitle">
+            Kamu adalah petani muda yang menjaga desa dari serangan makhluk
+            misterius. Tanam, bertahan, eksplorasi, lalu tingkatkan desa agar tetap
+            berdiri.
+          </p>
+        </div>
+        <div class="meta">
+          <div class="chip">Hari <span id="dayValue">1</span></div>
+          <div class="chip">Trofi <span id="trophyValue">0</span></div>
+          <div class="chip">Level <span id="levelValue">1</span></div>
+          <div class="chip">Cuaca <span id="weatherValue">Cerah</span></div>
+        </div>
+      </header>
+
+      <main class="grid">
+        <section class="board-card">
+          <div class="canvas-wrap">
+            <div class="scene-tag" id="sceneTag">Hidup & Persiapan</div>
+            <canvas id="gameCanvas" width="710" height="350"></canvas>
+          </div>
+          <div class="board-footer">
+            <div id="statusText">Fase: Persiapan</div>
+            <div id="weaponText">Senjata: Sabit</div>
+          </div>
+        </section>
+
+        <aside class="panel">
+          <div class="panel-section">
+            <h2>Fase dan Aksi</h2>
+            <p id="phaseDesc">
+              Siapkan tanaman dan formasi sebelum gelombang musuh datang.
+            </p>
+            <div class="button-row">
+              <button id="startDefense" type="button">Mulai Pertahanan</button>
+              <button id="toUpgrade" type="button" class="secondary">
+                Lanjut Peningkatan
+              </button>
+              <button id="nextDay" type="button" class="secondary">
+                Hari Berikutnya
+              </button>
+              <button id="resetGame" type="button" class="danger">
+                Ulang Game
+              </button>
+            </div>
+          </div>
+
+          <div class="panel-section">
+            <h2>Benih dan Tanaman</h2>
+            <div class="plant-list" id="plantList"></div>
+            <div class="button-row" style="margin-top: 10px">
+              <button id="toggleHarvest" type="button" class="secondary">
+                Mode Panen: Mati
+              </button>
+            </div>
+          </div>
+
+          <div class="panel-section">
+            <h2>Inventaris</h2>
+            <div class="stats-grid">
+              <div>Koin: <span id="coinsValue">0</span></div>
+              <div>Material: <span id="materialValue">0</span></div>
+              <div>Benih Penyihir: <span id="seedMageValue">0</span></div>
+              <div>Benih Pelambat: <span id="seedSlowValue">0</span></div>
+              <div>Benih Penyembuh: <span id="seedHealValue">0</span></div>
+              <div>Benih Penguat: <span id="seedBuffValue">0</span></div>
+              <div>HP Inti: <span id="coreValue">0</span></div>
+              <div>Nyawa: <span id="lifeValue">0</span></div>
+            </div>
+          </div>
+
+          <div class="panel-section hidden" id="explorePanel">
+            <h2>Eksplorasi</h2>
+            <p>Pilih area untuk mencari benih langka dan relik.</p>
+            <div class="button-row">
+              <button id="exploreForest" type="button">Hutan</button>
+              <button id="exploreCave" type="button">Gua</button>
+              <button id="exploreSwamp" type="button">Rawa</button>
+            </div>
+          </div>
+
+          <div class="panel-section hidden" id="upgradePanel">
+            <h2>Peningkatan</h2>
+            <div class="button-row">
+              <button id="upgradeCore" type="button">Perkuat Inti Desa</button>
+              <button id="upgradePlants" type="button">Tingkatkan Tanaman</button>
+              <button id="upgradePlayer" type="button">Tingkatkan Senjata</button>
+              <button id="upgradeFarm" type="button">Tingkatkan Ladang</button>
+            </div>
+          </div>
+
+          <div class="panel-section">
+            <h2>Kontrol</h2>
+            <div class="control-list">
+              <div>WASD: Gerak petani saat pertahanan</div>
+              <div>WASD: Geser kursor tanam saat persiapan</div>
+              <div>F: Tanam atau panen di kursor</div>
+              <div>Klik kiri mouse: Serang musuh</div>
+              <div>Roda mouse: Ganti senjata</div>
+              <div>Spasi: Menghindar singkat</div>
+              <div>E: Menu karakter</div>
+              <div>ESC: Jeda</div>
+            </div>
+          </div>
+
+          <div class="panel-section">
+            <h2>Catatan</h2>
+            <div class="log" id="log"></div>
+          </div>
+        </aside>
+      </main>
+    </div>
+
+    <div class="overlay" id="overlay">
+      <div class="overlay-card">
+        <h3 id="overlayTitle">Menu</h3>
+        <div id="overlayBody"></div>
+        <div class="overlay-actions" id="overlayActions"></div>
+      </div>
+    </div>
+
+    <script>
+      const canvas = document.getElementById("gameCanvas");
+      const ctx = canvas.getContext("2d");
+
+      const ui = {
+        dayValue: document.getElementById("dayValue"),
+        trophyValue: document.getElementById("trophyValue"),
+        levelValue: document.getElementById("levelValue"),
+        weatherValue: document.getElementById("weatherValue"),
+        sceneTag: document.getElementById("sceneTag"),
+        statusText: document.getElementById("statusText"),
+        weaponText: document.getElementById("weaponText"),
+        phaseDesc: document.getElementById("phaseDesc"),
+        plantList: document.getElementById("plantList"),
+        coinsValue: document.getElementById("coinsValue"),
+        materialValue: document.getElementById("materialValue"),
+        seedMageValue: document.getElementById("seedMageValue"),
+        seedSlowValue: document.getElementById("seedSlowValue"),
+        seedHealValue: document.getElementById("seedHealValue"),
+        seedBuffValue: document.getElementById("seedBuffValue"),
+        coreValue: document.getElementById("coreValue"),
+        lifeValue: document.getElementById("lifeValue"),
+        explorePanel: document.getElementById("explorePanel"),
+        upgradePanel: document.getElementById("upgradePanel"),
+        startDefense: document.getElementById("startDefense"),
+        toUpgrade: document.getElementById("toUpgrade"),
+        nextDay: document.getElementById("nextDay"),
+        resetGame: document.getElementById("resetGame"),
+        toggleHarvest: document.getElementById("toggleHarvest"),
+        exploreForest: document.getElementById("exploreForest"),
+        exploreCave: document.getElementById("exploreCave"),
+        exploreSwamp: document.getElementById("exploreSwamp"),
+        upgradeCore: document.getElementById("upgradeCore"),
+        upgradePlants: document.getElementById("upgradePlants"),
+        upgradePlayer: document.getElementById("upgradePlayer"),
+        upgradeFarm: document.getElementById("upgradeFarm"),
+        log: document.getElementById("log"),
+        overlay: document.getElementById("overlay"),
+        overlayTitle: document.getElementById("overlayTitle"),
+        overlayBody: document.getElementById("overlayBody"),
+        overlayActions: document.getElementById("overlayActions"),
+      };
+
+      const rows = 5;
+      const cols = 9;
+      const cellSize = 70;
+      const coreWidth = 80;
+      const gridStartX = coreWidth;
+      const gridEndX = gridStartX + cols * cellSize;
+      const boardHeight = rows * cellSize;
+
+      const phaseLabels = {
+        persiapan: "Persiapan",
+        pertahanan: "Pertahanan",
+        eksplorasi: "Eksplorasi",
+        upgrade: "Peningkatan",
+      };
+
+      const sceneTitles = {
+        persiapan: "Hidup & Persiapan",
+        pertahanan: "Pengepungan",
+        eksplorasi: "Eksplorasi & Buru Material",
+        upgrade: "Peningkatan Desa",
+      };
+
+      const plantDefs = {
+        mage: {
+          name: "Penyihir",
+          cost: { benih: 1, koin: 12 },
+          damage: 7,
+          range: 220,
+          cooldown: 1.1,
+          hp: 48,
+          color: "#3a7bd5",
+          symbol: "M",
+        },
+        slow: {
+          name: "Pelambat",
+          cost: { benih: 1, koin: 10 },
+          damage: 3,
+          range: 200,
+          cooldown: 1.5,
+          hp: 52,
+          slow: 0.45,
+          slowDuration: 2.6,
+          color: "#2a9d8f",
+          symbol: "L",
+        },
+        heal: {
+          name: "Penyembuh",
+          cost: { benih: 1, koin: 14 },
+          heal: 6,
+          range: 120,
+          cooldown: 2.2,
+          hp: 44,
+          color: "#7fb069",
+          symbol: "H",
+        },
+        buff: {
+          name: "Penguat",
+          cost: { benih: 1, koin: 11 },
+          buff: 0.25,
+          hp: 60,
+          color: "#f4a261",
+          symbol: "U",
+        },
+      };
+
+      const enemyDefs = {
+        slime: { name: "Lendir", hp: 32, speed: 28, damage: 14, color: "#6ce0c6" },
+        golem: { name: "Golem", hp: 70, speed: 16, damage: 22, color: "#a98467" },
+        specter: { name: "Arwah", hp: 44, speed: 22, damage: 16, color: "#cdb4db" },
+      };
+
+      const weapons = [
+        { name: "Sabit", damage: 8, cooldown: 0.35, speed: 520, color: "#f4d35e", radius: 4 },
+        { name: "Tombak", damage: 14, cooldown: 0.7, speed: 420, color: "#ee964b", radius: 5 },
+      ];
+
+      const relicPool = [
+        { name: "Relik Penjaga", effect: { coreMax: 15 } },
+        { name: "Relik Bara", effect: { plantDamage: 0.1 } },
+        { name: "Relik Pemburu", effect: { playerDamage: 0.1 } },
+        { name: "Relik Embun", effect: { slowBonus: 0.1 } },
+        { name: "Relik Panen", effect: { coinsBonus: 0.1 } },
+      ];
+
+      const weatherTable = [
+        { name: "Cerah", desc: "Panen lebih baik", coinsBonus: 0.1, enemySpeed: 0, healBonus: 0 },
+        { name: "Hujan", desc: "Tanaman lebih segar", coinsBonus: 0, enemySpeed: -0.05, healBonus: 0.2 },
+        { name: "Berangin", desc: "Musuh lebih cepat", coinsBonus: 0, enemySpeed: 0.1, healBonus: 0 },
+        { name: "Kabut", desc: "Musuh melambat", coinsBonus: 0, enemySpeed: -0.1, healBonus: 0 },
+      ];
+
+      let selectedPlant = "mage";
+      let harvestMode = false;
+      let selectedCell = { row: 2, col: 2 };
+      let hoverCell = null;
+      const keys = {};
+
+      const game = {
+        day: 1,
+        maxDays: 5,
+        phase: "persiapan",
+        coins: 60,
+        materials: 4,
+        trophies: 0,
+        seeds: { mage: 0, slow: 0, heal: 0, buff: 0 },
+        core: { hp: 120, maxHp: 120 },
+        lives: 3,
+        xp: 0,
+        level: 1,
+        skillPoints: 0,
+        skills: { farming: 0, exploration: 0, combat: 0 },
+        bonuses: {
+          plantDamage: 0,
+          playerDamage: 0,
+          slowBonus: 0,
+          coinsBonus: 0,
+          plantCostDiscount: 0,
+          dailySeedBonus: 0,
+        },
+        relics: [],
+        weather: { name: "Cerah", desc: "", coinsBonus: 0, enemySpeed: 0, healBonus: 0 },
+        plants: [],
+        enemies: [],
+        projectiles: [],
+        effects: [],
+        waveTimer: 0,
+        spawnQueue: [],
+        kills: 0,
+        paused: false,
+        explorationDone: false,
+        player: {
+          x: gridStartX + 20,
+          y: boardHeight / 2,
+          speed: 140,
+          weaponIndex: 0,
+          cooldown: 0,
+          invulnUntil: 0,
+          dodgeUntil: 0,
+          dodgeCooldownUntil: 0,
+        },
+      };
+
+      function log(message) {
+        const line = document.createElement("div");
+        line.textContent = message;
+        ui.log.prepend(line);
+        if (ui.log.children.length > 12) {
+          ui.log.removeChild(ui.log.lastChild);
+        }
+      }
+
+      function clamp(value, min, max) {
+        return Math.min(Math.max(value, min), max);
+      }
+
+      function randRange(min, max) {
+        return Math.floor(Math.random() * (max - min + 1)) + min;
+      }
+
+      function cellCenter(row, col) {
+        return {
+          x: gridStartX + col * cellSize + cellSize / 2,
+          y: row * cellSize + cellSize / 2,
+        };
+      }
+
+      function getCellAt(x, y) {
+        if (x < gridStartX || x >= gridEndX) return null;
+        const col = Math.floor((x - gridStartX) / cellSize);
+        const row = Math.floor(y / cellSize);
+        if (row < 0 || row >= rows) return null;
+        return { row, col };
+      }
+
+      function grantDailySeeds() {
+        const base = { mage: 1, slow: 1, heal: 1, buff: 1 };
+        Object.keys(base).forEach((type) => {
+          game.seeds[type] += base[type] + game.bonuses.dailySeedBonus;
+        });
+      }
+
+      function rollWeather() {
+        const pick = weatherTable[randRange(0, weatherTable.length - 1)];
+        game.weather = { ...pick };
+        log(`Cuaca hari ini: ${pick.name}. ${pick.desc}`);
+      }
+
+      function costWithDiscount(baseCost) {
+        const discount = 1 - clamp(game.bonuses.plantCostDiscount, 0, 0.5);
+        return Math.max(0, Math.ceil(baseCost * discount));
+      }
+
+      function getPlantAt(row, col) {
+        return game.plants.find((plant) => plant.row === row && plant.col === col);
+      }
+
+      function placePlant(row, col) {
+        if (game.phase !== "persiapan") {
+          log("Tanam hanya saat fase persiapan.");
+          return;
+        }
+
+        if (harvestMode) {
+          harvestPlant(row, col);
+          return;
+        }
+
+        if (getPlantAt(row, col)) {
+          log("Lahan sudah terisi.");
+          return;
+        }
+
+        const def = plantDefs[selectedPlant];
+        if (game.seeds[selectedPlant] < def.cost.benih) {
+          log("Benih tidak cukup.");
+          return;
+        }
+
+        const coinCost = costWithDiscount(def.cost.koin);
+        if (game.coins < coinCost) {
+          log("Koin tidak cukup.");
+          return;
+        }
+
+        game.seeds[selectedPlant] -= def.cost.benih;
+        game.coins -= coinCost;
+
+        game.plants.push({
+          row,
+          col,
+          type: selectedPlant,
+          hp: def.hp,
+          maxHp: def.hp,
+          cooldown: 0,
+        });
+
+        log(`Menanam ${def.name} di baris ${row + 1}.`);
+        updateUI();
+      }
+
+      function harvestPlant(row, col) {
+        const plant = getPlantAt(row, col);
+        if (!plant) {
+          log("Tidak ada tanaman untuk dipanen.");
+          return;
+        }
+        game.plants = game.plants.filter((item) => item !== plant);
+        const base = 8;
+        const bonus =
+          1 + game.skills.farming * 0.05 + game.bonuses.coinsBonus + game.weather.coinsBonus;
+        const gain = Math.round(base * bonus);
+        game.coins += gain;
+        log(`Panen berhasil, koin +${gain}.`);
+        updateUI();
+      }
+
+      function startDefense() {
+        if (game.phase !== "persiapan") return;
+        game.phase = "pertahanan";
+        game.waveTimer = 0;
+        game.spawnQueue = createWave(game.day);
+        game.kills = 0;
+        game.lives = 3;
+        game.explorationDone = false;
+        game.player.x = gridStartX + 20;
+        game.player.y = boardHeight / 2;
+        log(`Gelombang hari ${game.day} dimulai.`);
+        updateUI();
+      }
+
+      function createWave(day) {
+        const total = 6 + day * 2;
+        const queue = [];
+        for (let i = 0; i < total; i += 1) {
+          const timeGap = Math.max(0.6, 1.3 - day * 0.07);
+          const time = i * timeGap + Math.random() * 0.4;
+          const roll = Math.random();
+          let type = "slime";
+          if (roll > 0.7 && day > 1) type = "specter";
+          if (roll > 0.85 && day > 2) type = "golem";
+          queue.push({ time, row: randRange(0, rows - 1), type });
+        }
+        return queue.sort((a, b) => a.time - b.time);
+      }
+
+      function endDefense() {
+        if (game.phase !== "pertahanan") return;
+        game.phase = "eksplorasi";
+        const harvest = Math.round(game.plants.length * (2 + game.skills.farming * 0.4));
+        const killReward = game.kills * 2;
+        const lootBonus = 1 + game.bonuses.coinsBonus + game.weather.coinsBonus;
+        game.coins += Math.round((harvest + killReward) * lootBonus);
+        game.materials += Math.max(1, Math.floor(game.day / 2));
+        game.trophies += 1;
+        grantDailySeeds();
+        gainXp(10 + game.day * 4 + game.kills);
+        log("Pertahanan sukses. Waktunya eksplorasi.");
+        if (game.day >= game.maxDays) {
+          showVictory();
+        }
+        updateUI();
+      }
+
+      function gainXp(amount) {
+        game.xp += amount;
+        const threshold = game.level * 18;
+        if (game.xp >= threshold) {
+          game.xp -= threshold;
+          game.level += 1;
+          game.skillPoints += 1;
+          log("Level naik! Kamu mendapat 1 poin kemampuan.");
+        }
+      }
+
+      function openUpgradePhase() {
+        if (game.phase !== "eksplorasi" || !game.explorationDone) {
+          return;
+        }
+        game.phase = "upgrade";
+        log("Masuk fase peningkatan dan bertani.");
+        updateUI();
+      }
+
+      function nextDay() {
+        if (game.phase !== "upgrade") return;
+        game.day += 1;
+        game.phase = "persiapan";
+        rollWeather();
+        log(`Hari ${game.day} dimulai. Siapkan pertahanan baru.`);
+        updateUI();
+      }
+
+      function exploreArea(area) {
+        if (game.phase !== "eksplorasi" || game.explorationDone) return;
+        const mult = 1 + game.skills.exploration * 0.08;
+        let loot = {
+          coins: randRange(8, 14),
+          materials: randRange(1, 3),
+          seeds: { mage: 0, slow: 0, heal: 0, buff: 0 },
+          relicChance: 0.2,
+        };
+
+        if (area === "hutan") {
+          loot.coins = randRange(12, 20);
+          loot.seeds.mage = 1;
+          loot.seeds.slow = 1;
+          loot.relicChance = 0.15;
+        } else if (area === "gua") {
+          loot.coins = randRange(8, 14);
+          loot.materials = randRange(2, 4);
+          loot.seeds.slow = 1;
+          loot.relicChance = 0.25;
+        } else {
+          loot.coins = randRange(6, 12);
+          loot.seeds.heal = 1;
+          loot.seeds.buff = 1;
+          loot.relicChance = 0.22;
+        }
+
+        const coinBonus = 1 + game.bonuses.coinsBonus + game.weather.coinsBonus;
+        game.coins += Math.round(loot.coins * mult * coinBonus);
+        game.materials += Math.round(loot.materials * mult);
+        Object.keys(loot.seeds).forEach((type) => {
+          game.seeds[type] += loot.seeds[type];
+        });
+
+        if (Math.random() < loot.relicChance) {
+          const relic = relicPool[randRange(0, relicPool.length - 1)];
+          applyRelic(relic);
+          log(`Menemukan ${relic.name}.`);
+        }
+
+        game.explorationDone = true;
+        log("Eksplorasi selesai. Lanjut ke peningkatan.");
+        updateUI();
+      }
+
+      function applyRelic(relic) {
+        game.relics.push(relic.name);
+        if (relic.effect.coreMax) {
+          game.core.maxHp += relic.effect.coreMax;
+          game.core.hp = Math.min(game.core.maxHp, game.core.hp + relic.effect.coreMax);
+        }
+        if (relic.effect.plantDamage) game.bonuses.plantDamage += relic.effect.plantDamage;
+        if (relic.effect.playerDamage) game.bonuses.playerDamage += relic.effect.playerDamage;
+        if (relic.effect.slowBonus) game.bonuses.slowBonus += relic.effect.slowBonus;
+        if (relic.effect.coinsBonus) game.bonuses.coinsBonus += relic.effect.coinsBonus;
+      }
+
+      function upgradeCore() {
+        const costCoin = 26;
+        const costMat = 4;
+        if (game.coins < costCoin || game.materials < costMat) {
+          log("Material atau koin kurang.");
+          return;
+        }
+        game.coins -= costCoin;
+        game.materials -= costMat;
+        game.core.maxHp += 20;
+        game.core.hp += 20;
+        log("Inti desa lebih kuat.");
+        updateUI();
+      }
+
+      function upgradePlants() {
+        const costCoin = 30;
+        const costMat = 4;
+        if (game.coins < costCoin || game.materials < costMat) {
+          log("Material atau koin kurang.");
+          return;
+        }
+        game.coins -= costCoin;
+        game.materials -= costMat;
+        game.bonuses.plantDamage += 0.1;
+        log("Tanaman mendapat bonus serangan.");
+        updateUI();
+      }
+
+      function upgradePlayer() {
+        const costCoin = 32;
+        const costMat = 3;
+        if (game.coins < costCoin || game.materials < costMat) {
+          log("Material atau koin kurang.");
+          return;
+        }
+        game.coins -= costCoin;
+        game.materials -= costMat;
+        game.bonuses.playerDamage += 0.1;
+        log("Senjata petani lebih tajam.");
+        updateUI();
+      }
+
+      function upgradeFarm() {
+        const costCoin = 24;
+        const costMat = 2;
+        if (game.coins < costCoin || game.materials < costMat) {
+          log("Material atau koin kurang.");
+          return;
+        }
+        game.coins -= costCoin;
+        game.materials -= costMat;
+        game.bonuses.dailySeedBonus += 1;
+        game.bonuses.plantCostDiscount += 0.05;
+        log("Ladang lebih produktif setiap hari.");
+        updateUI();
+      }
+
+      function showOverlay(title, bodyHtml, actions) {
+        ui.overlayTitle.textContent = title;
+        ui.overlayBody.innerHTML = bodyHtml;
+        ui.overlayActions.innerHTML = "";
+        actions.forEach((action) => {
+          const button = document.createElement("button");
+          button.type = "button";
+          button.textContent = action.label;
+          if (action.className) button.className = action.className;
+          button.addEventListener("click", action.onClick);
+          ui.overlayActions.appendChild(button);
+        });
+        ui.overlay.classList.add("show");
+        game.paused = true;
+      }
+
+      function hideOverlay() {
+        ui.overlay.classList.remove("show");
+        ui.overlayTitle.textContent = "";
+        ui.overlayBody.innerHTML = "";
+        ui.overlayActions.innerHTML = "";
+        game.paused = false;
+      }
+
+      function showVictory() {
+        showOverlay(
+          "Desa Bertahan",
+          "<p>Kamu berhasil melewati gelombang utama. Desa merayakan kemenangan!</p>",
+          [
+            {
+              label: "Lanjut Main",
+              onClick: () => {
+                hideOverlay();
+                game.maxDays += 3;
+              },
+            },
+            { label: "Tutup", className: "secondary", onClick: hideOverlay },
+          ]
+        );
+      }
+
+      function showGameOver() {
+        showOverlay(
+          "Desa Runtuh",
+          "<p>Inti desa hancur atau nyawa petani habis. Coba strategi baru.</p>",
+          [
+            {
+              label: "Ulang",
+              onClick: () => {
+                hideOverlay();
+                resetGame();
+              },
+            },
+            { label: "Tutup", className: "secondary", onClick: hideOverlay },
+          ]
+        );
+      }
+
+      function renderPlantList() {
+        ui.plantList.innerHTML = "";
+        Object.keys(plantDefs).forEach((type) => {
+          const def = plantDefs[type];
+          const button = document.createElement("button");
+          button.type = "button";
+          button.className = "plant-btn";
+          if (selectedPlant === type) button.classList.add("active");
+          const coinCost = costWithDiscount(def.cost.koin);
+          button.innerHTML = `
+            <div class="plant-name">${def.name}</div>
+            <div class="plant-cost">Benih ${game.seeds[type]} | Koin ${coinCost}</div>
+          `;
+          button.addEventListener("click", () => {
+            selectedPlant = type;
+            renderPlantList();
+          });
+          ui.plantList.appendChild(button);
+        });
+      }
+
+      function updateUI() {
+        ui.dayValue.textContent = game.day;
+        ui.trophyValue.textContent = game.trophies;
+        ui.levelValue.textContent = game.level;
+        ui.weatherValue.textContent = game.weather.name;
+        ui.sceneTag.textContent = sceneTitles[game.phase];
+        ui.coinsValue.textContent = game.coins;
+        ui.materialValue.textContent = game.materials;
+        ui.seedMageValue.textContent = game.seeds.mage;
+        ui.seedSlowValue.textContent = game.seeds.slow;
+        ui.seedHealValue.textContent = game.seeds.heal;
+        ui.seedBuffValue.textContent = game.seeds.buff;
+        ui.coreValue.textContent = `${Math.round(game.core.hp)}/${game.core.maxHp}`;
+        ui.lifeValue.textContent = game.lives;
+        ui.statusText.textContent = `Fase: ${phaseLabels[game.phase]}`;
+        ui.weaponText.textContent = `Senjata: ${weapons[game.player.weaponIndex].name}`;
+
+        ui.startDefense.disabled = game.phase !== "persiapan";
+        ui.toUpgrade.disabled = !(game.phase === "eksplorasi" && game.explorationDone);
+        ui.nextDay.disabled = game.phase !== "upgrade";
+
+        ui.explorePanel.classList.toggle("hidden", game.phase !== "eksplorasi");
+        ui.upgradePanel.classList.toggle("hidden", game.phase !== "upgrade");
+
+        if (game.phase === "persiapan") {
+          ui.phaseDesc.textContent =
+            "Siapkan tanaman dan formasi sebelum gelombang musuh datang.";
+        } else if (game.phase === "pertahanan") {
+          ui.phaseDesc.textContent = "Pertahankan Inti Desa dari serangan monster.";
+        } else if (game.phase === "eksplorasi") {
+          ui.phaseDesc.textContent =
+            "Jelajahi area untuk mencari benih, material, dan relik.";
+        } else if (game.phase === "upgrade") {
+          ui.phaseDesc.textContent = "Tingkatkan desa, senjata, dan tanaman.";
+        }
+
+        renderPlantList();
+      }
+
+      function findEnemyInRange(plant) {
+        const def = plantDefs[plant.type];
+        const center = cellCenter(plant.row, plant.col);
+        let target = null;
+        let closest = Infinity;
+        game.enemies.forEach((enemy) => {
+          if (enemy.row !== plant.row) return;
+          const dist = Math.abs(enemy.x - center.x);
+          if (dist <= def.range && dist < closest) {
+            closest = dist;
+            target = enemy;
+          }
+        });
+        return target;
+      }
+
+      function getBuffMultiplier(plant) {
+        let bonus = 0;
+        game.plants.forEach((item) => {
+          if (item.type !== "buff") return;
+          const distRow = Math.abs(item.row - plant.row);
+          const distCol = Math.abs(item.col - plant.col);
+          if (distRow <= 1 && distCol <= 1) {
+            bonus += plantDefs.buff.buff;
+          }
+        });
+        return 1 + bonus;
+      }
+
+      function updatePlants(dt) {
+        const now = performance.now() / 1000;
+        game.plants.forEach((plant) => {
+          plant.cooldown -= dt;
+          const def = plantDefs[plant.type];
+
+          if (plant.type === "heal") {
+            if (plant.cooldown <= 0) {
+              const healAmount =
+                def.heal * (1 + game.bonuses.plantDamage + game.weather.healBonus);
+              game.plants.forEach((target) => {
+                const distRow = Math.abs(target.row - plant.row);
+                const distCol = Math.abs(target.col - plant.col);
+                if (distRow <= 1 && distCol <= 1) {
+                  target.hp = Math.min(target.maxHp, target.hp + healAmount);
+                }
+              });
+              game.core.hp = Math.min(game.core.maxHp, game.core.hp + healAmount * 0.3);
+              plant.cooldown = def.cooldown;
+              return;
+            }
+          }
+
+          if (plant.type === "buff") return;
+
+          if (plant.cooldown <= 0) {
+            const enemy = findEnemyInRange(plant);
+            if (!enemy) return;
+            const multiplier =
+              (1 + game.bonuses.plantDamage) * getBuffMultiplier(plant);
+            const damage = def.damage * multiplier;
+            enemy.hp -= damage;
+            if (plant.type === "slow") {
+              enemy.slowUntil = Math.max(
+                enemy.slowUntil,
+                now + def.slowDuration
+              );
+              enemy.slowFactor = Math.max(
+                0.2,
+                1 - def.slow - game.bonuses.slowBonus
+              );
+            }
+            const center = cellCenter(plant.row, plant.col);
+            game.effects.push({
+              x1: center.x,
+              y1: center.y,
+              x2: enemy.x,
+              y2: enemy.y,
+              ttl: 0.15,
+              color: def.color,
+            });
+            plant.cooldown = def.cooldown;
+          }
+        });
+      }
+
+      function findBlockingPlant(enemy) {
+        let target = null;
+        let targetX = -Infinity;
+        game.plants.forEach((plant) => {
+          if (plant.row !== enemy.row) return;
+          const center = cellCenter(plant.row, plant.col);
+          if (center.x < enemy.x && center.x > targetX) {
+            target = plant;
+            targetX = center.x;
+          }
+        });
+        if (!target) return null;
+        if (enemy.x - targetX <= cellSize * 0.25) {
+          return target;
+        }
+        return null;
+      }
+
+      function updateEnemies(dt) {
+        const now = performance.now() / 1000;
+        game.enemies.forEach((enemy) => {
+          const targetPlant = findBlockingPlant(enemy);
+          if (targetPlant) {
+            enemy.attackCooldown -= dt;
+            if (enemy.attackCooldown <= 0) {
+              targetPlant.hp -= enemy.damage;
+              enemy.attackCooldown = enemy.attackRate;
+              if (targetPlant.hp <= 0) {
+                game.plants = game.plants.filter((plant) => plant !== targetPlant);
+                log("Satu tanaman hancur.");
+              }
+            }
+            return;
+          }
+
+          let speed = enemy.speed;
+          if (now < enemy.slowUntil) {
+            speed *= enemy.slowFactor;
+          }
+          enemy.x -= speed * dt;
+
+          const dx = enemy.x - game.player.x;
+          const dy = enemy.y - game.player.y;
+          if (dx * dx + dy * dy < 220 && now > game.player.invulnUntil) {
+            game.lives -= 1;
+            game.player.invulnUntil = now + 1.2;
+            log("Petani terkena serangan. Nyawa berkurang.");
+          }
+
+          if (enemy.x <= coreWidth + 8) {
+            game.core.hp -= enemy.damage;
+            enemy.hp = 0;
+            enemy.reachedCore = true;
+            log("Inti desa diserang.");
+          }
+        });
+      }
+
+      function cleanupEnemies() {
+        game.enemies.forEach((enemy) => {
+          if (enemy.hp <= 0 && !enemy.counted && !enemy.reachedCore) {
+            enemy.counted = true;
+            game.kills += 1;
+          }
+        });
+        game.enemies = game.enemies.filter((enemy) => enemy.hp > 0);
+      }
+
+      function updateProjectiles(dt) {
+        game.projectiles.forEach((shot) => {
+          if (shot.hit) return;
+          shot.x += shot.vx * dt;
+          shot.y += shot.vy * dt;
+          for (const enemy of game.enemies) {
+            if (enemy.hp <= 0) continue;
+            const dx = enemy.x - shot.x;
+            const dy = enemy.y - shot.y;
+            if (dx * dx + dy * dy <= shot.radius * shot.radius * 9) {
+              enemy.hp -= shot.damage;
+              shot.hit = true;
+              break;
+            }
+          }
+          if (
+            shot.x < 0 ||
+            shot.x > canvas.width ||
+            shot.y < 0 ||
+            shot.y > canvas.height
+          ) {
+            shot.hit = true;
+          }
+        });
+
+        game.projectiles = game.projectiles.filter((shot) => !shot.hit);
+      }
+
+      function updateEffects(dt) {
+        game.effects.forEach((effect) => {
+          effect.ttl -= dt;
+        });
+        game.effects = game.effects.filter((effect) => effect.ttl > 0);
+      }
+
+      function shootAt(targetX, targetY) {
+        if (game.phase !== "pertahanan") return;
+        if (game.player.cooldown > 0) return;
+        const weapon = weapons[game.player.weaponIndex];
+        const dx = targetX - game.player.x;
+        const dy = targetY - game.player.y;
+        const dist = Math.hypot(dx, dy) || 1;
+        const vx = (dx / dist) * weapon.speed;
+        const vy = (dy / dist) * weapon.speed;
+        const damage = weapon.damage * (1 + game.bonuses.playerDamage + game.skills.combat * 0.03);
+        game.projectiles.push({
+          x: game.player.x,
+          y: game.player.y,
+          vx,
+          vy,
+          damage,
+          radius: weapon.radius,
+          color: weapon.color,
+          hit: false,
+        });
+        game.player.cooldown = weapon.cooldown;
+      }
+
+      function updatePlayer(dt) {
+        if (game.phase !== "pertahanan") return;
+        let speed = game.player.speed;
+        const now = performance.now() / 1000;
+        if (now < game.player.dodgeUntil) {
+          speed *= 1.8;
+        }
+
+        let vx = 0;
+        let vy = 0;
+        if (keys.w) vy -= 1;
+        if (keys.s) vy += 1;
+        if (keys.a) vx -= 1;
+        if (keys.d) vx += 1;
+        if (vx || vy) {
+          const len = Math.hypot(vx, vy) || 1;
+          game.player.x += (vx / len) * speed * dt;
+          game.player.y += (vy / len) * speed * dt;
+        }
+
+        game.player.x = clamp(game.player.x, 10, canvas.width - 10);
+        game.player.y = clamp(game.player.y, 10, canvas.height - 10);
+
+        if (game.player.cooldown > 0) {
+          game.player.cooldown -= dt;
+        }
+      }
+
+      function updateGame(dt) {
+        if (game.paused) return;
+
+        updatePlayer(dt);
+
+        if (game.phase === "pertahanan") {
+          game.waveTimer += dt;
+          while (game.spawnQueue.length && game.spawnQueue[0].time <= game.waveTimer) {
+            const spawn = game.spawnQueue.shift();
+            spawnEnemy(spawn.type, spawn.row);
+          }
+          updatePlants(dt);
+          updateEnemies(dt);
+          updateProjectiles(dt);
+          updateEffects(dt);
+          cleanupEnemies();
+
+          if (!game.spawnQueue.length && !game.enemies.length) {
+            endDefense();
+          }
+        }
+
+        if (!game.paused && (game.core.hp <= 0 || game.lives <= 0)) {
+          showGameOver();
+        }
+      }
+
+      function spawnEnemy(type, row) {
+        const def = enemyDefs[type];
+        const center = cellCenter(row, cols - 1);
+        const speed = Math.max(6, def.speed * (1 + game.weather.enemySpeed));
+        game.enemies.push({
+          type,
+          row,
+          x: gridEndX + 20,
+          y: center.y,
+          hp: def.hp,
+          maxHp: def.hp,
+          speed,
+          damage: def.damage,
+          color: def.color,
+          slowUntil: 0,
+          slowFactor: 1,
+          attackRate: 0.8,
+          attackCooldown: 0.4,
+          reachedCore: false,
+          counted: false,
+        });
+      }
+
+      function drawCloud(x, y, scale, alpha) {
+        ctx.save();
+        ctx.translate(x, y);
+        ctx.scale(scale, scale);
+        ctx.globalAlpha = alpha;
+        ctx.fillStyle = "#fff5e6";
+        ctx.beginPath();
+        ctx.arc(0, 0, 18, 0, Math.PI * 2);
+        ctx.arc(20, -6, 22, 0, Math.PI * 2);
+        ctx.arc(42, 0, 16, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+      }
+
+      function drawHill(y, height, color) {
+        ctx.fillStyle = color;
+        ctx.beginPath();
+        ctx.moveTo(0, y);
+        ctx.bezierCurveTo(
+          canvas.width * 0.25,
+          y - height,
+          canvas.width * 0.55,
+          y + height * 0.25,
+          canvas.width,
+          y - height * 0.6
+        );
+        ctx.lineTo(canvas.width, canvas.height);
+        ctx.lineTo(0, canvas.height);
+        ctx.closePath();
+        ctx.fill();
+      }
+
+      function drawTree(x, y, scale, night) {
+        ctx.save();
+        ctx.translate(x, y);
+        ctx.scale(scale, scale);
+        ctx.fillStyle = night ? "#3b2a1a" : "#7b4a24";
+        ctx.fillRect(-4, 0, 8, 18);
+        ctx.fillStyle = night ? "#2f4f2e" : "#4f8f2d";
+        ctx.beginPath();
+        ctx.arc(0, -6, 16, 0, Math.PI * 2);
+        ctx.arc(-10, 2, 12, 0, Math.PI * 2);
+        ctx.arc(12, 2, 12, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+      }
+
+      function drawBackground() {
+        const isDefense = game.phase === "pertahanan";
+        const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+        if (isDefense) {
+          gradient.addColorStop(0, "#1f2a44");
+          gradient.addColorStop(0.55, "#3d4a5c");
+          gradient.addColorStop(1, "#4a3a2e");
+        } else {
+          gradient.addColorStop(0, "#8fd5ff");
+          gradient.addColorStop(0.55, "#cfe9ff");
+          gradient.addColorStop(1, "#f1d3a7");
+        }
+        ctx.fillStyle = gradient;
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        if (isDefense) {
+          ctx.fillStyle = "#e9f2ff";
+          ctx.beginPath();
+          ctx.arc(canvas.width - 80, 60, 22, 0, Math.PI * 2);
+          ctx.fill();
+        } else {
+          ctx.fillStyle = "#ffd166";
+          ctx.beginPath();
+          ctx.arc(canvas.width - 70, 70, 26, 0, Math.PI * 2);
+          ctx.fill();
+        }
+
+        drawCloud(90, 60, 1.1, isDefense ? 0.5 : 0.9);
+        drawCloud(320, 80, 0.9, isDefense ? 0.45 : 0.8);
+        drawCloud(520, 50, 1.0, isDefense ? 0.4 : 0.85);
+
+        const horizon = canvas.height * 0.48;
+        drawHill(horizon + 20, 80, isDefense ? "#36463a" : "#6fb46a");
+        drawHill(horizon + 60, 60, isDefense ? "#2f3b32" : "#5da058");
+
+        drawTree(90, horizon + 40, 1.0, isDefense);
+        drawTree(180, horizon + 30, 0.8, isDefense);
+        drawTree(canvas.width - 140, horizon + 38, 1.1, isDefense);
+
+        if (isDefense) {
+          ctx.fillStyle = "rgba(18, 24, 38, 0.25)";
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+        }
+      }
+
+      function drawGrid() {
+        const isDefense = game.phase === "pertahanan";
+        const light = isDefense ? "#705037" : "#9b6a3f";
+        const dark = isDefense ? "#5d3f2a" : "#87542f";
+        for (let row = 0; row < rows; row += 1) {
+          for (let col = 0; col < cols; col += 1) {
+            const x = gridStartX + col * cellSize;
+            const y = row * cellSize;
+            ctx.fillStyle = (row + col) % 2 === 0 ? light : dark;
+            ctx.fillRect(x, y, cellSize, cellSize);
+          }
+        }
+        ctx.strokeStyle = "rgba(255,255,255,0.12)";
+        for (let row = 0; row <= rows; row += 1) {
+          ctx.beginPath();
+          ctx.moveTo(gridStartX, row * cellSize);
+          ctx.lineTo(gridEndX, row * cellSize);
+          ctx.stroke();
+        }
+        for (let col = 0; col <= cols; col += 1) {
+          ctx.beginPath();
+          ctx.moveTo(gridStartX + col * cellSize, 0);
+          ctx.lineTo(gridStartX + col * cellSize, boardHeight);
+          ctx.stroke();
+        }
+      }
+
+      function drawCore() {
+        ctx.fillStyle = "#e3caa2";
+        ctx.fillRect(0, 0, coreWidth, boardHeight);
+
+        const houseWidth = coreWidth - 18;
+        const houseHeight = 60;
+        const houseX = 9;
+        const houseY = 44;
+
+        ctx.fillStyle = "#f1d1a1";
+        ctx.fillRect(houseX, houseY, houseWidth, houseHeight);
+        ctx.fillStyle = "#d89b57";
+        ctx.beginPath();
+        ctx.moveTo(houseX - 4, houseY);
+        ctx.lineTo(houseX + houseWidth / 2, houseY - 20);
+        ctx.lineTo(houseX + houseWidth + 4, houseY);
+        ctx.closePath();
+        ctx.fill();
+
+        ctx.fillStyle = "#9c6a3b";
+        ctx.fillRect(houseX + 6, houseY + 18, 12, 18);
+        ctx.fillStyle = "#7d4f2b";
+        ctx.fillRect(houseX + houseWidth - 18, houseY + 18, 12, 12);
+
+        ctx.fillStyle = "#7b4a24";
+        ctx.fillRect(houseX + houseWidth / 2 - 6, houseY + 26, 12, 22);
+        ctx.fillStyle = "#f5d28f";
+        ctx.fillRect(houseX + houseWidth / 2 - 2, houseY + 30, 4, 6);
+
+        ctx.fillStyle = "#c28c52";
+        for (let y = 6; y < boardHeight; y += 18) {
+          ctx.fillRect(coreWidth - 6, y, 4, 10);
+        }
+
+        const barWidth = coreWidth - 16;
+        const ratio = clamp(game.core.hp / game.core.maxHp, 0, 1);
+        ctx.fillStyle = "rgba(0, 0, 0, 0.15)";
+        ctx.fillRect(8, boardHeight - 18, barWidth, 8);
+        ctx.fillStyle = "#8ee26b";
+        ctx.fillRect(8, boardHeight - 18, barWidth * ratio, 8);
+        ctx.fillStyle = "#4b2b15";
+        ctx.font = "bold 11px Baloo 2";
+        ctx.fillText("INTI", 12, 20);
+      }
+
+      function drawPlantGlyph(type, x, y, color) {
+        ctx.save();
+        ctx.translate(x, y);
+        ctx.fillStyle = "#5a3a22";
+        ctx.beginPath();
+        ctx.ellipse(0, 12, 14, 6, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.strokeStyle = "#2f7a3b";
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.moveTo(0, 10);
+        ctx.lineTo(0, -6);
+        ctx.stroke();
+
+        ctx.fillStyle = color;
+        ctx.beginPath();
+        ctx.ellipse(-6, 2, 6, 10, -0.6, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.ellipse(6, 2, 6, 10, 0.6, 0, Math.PI * 2);
+        ctx.fill();
+
+        if (type === "mage") {
+          ctx.fillStyle = "#e0f2ff";
+          ctx.beginPath();
+          ctx.arc(0, -10, 5, 0, Math.PI * 2);
+          ctx.fill();
+        } else if (type === "slow") {
+          ctx.strokeStyle = "#f5f1e2";
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.arc(0, -6, 6, 0, Math.PI * 1.4);
+          ctx.stroke();
+        } else if (type === "heal") {
+          ctx.strokeStyle = "#fefefe";
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.moveTo(-4, -8);
+          ctx.lineTo(4, -8);
+          ctx.moveTo(0, -12);
+          ctx.lineTo(0, -4);
+          ctx.stroke();
+        } else if (type === "buff") {
+          ctx.strokeStyle = "#fff1c2";
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.arc(0, -6, 7, 0, Math.PI * 2);
+          ctx.stroke();
+        }
+        ctx.restore();
+      }
+
+      function drawPlants() {
+        game.plants.forEach((plant) => {
+          const def = plantDefs[plant.type];
+          const center = cellCenter(plant.row, plant.col);
+          drawPlantGlyph(plant.type, center.x, center.y, def.color);
+
+          if (plant.type === "buff") {
+            ctx.strokeStyle = "rgba(244,162,97,0.6)";
+            ctx.beginPath();
+            ctx.arc(center.x, center.y, 26, 0, Math.PI * 2);
+            ctx.stroke();
+          }
+
+          const ratio = clamp(plant.hp / plant.maxHp, 0, 1);
+          ctx.fillStyle = "rgba(0,0,0,0.2)";
+          ctx.fillRect(center.x - 18, center.y - 26, 36, 4);
+          ctx.fillStyle = "#a7f3d0";
+          ctx.fillRect(center.x - 18, center.y - 26, 36 * ratio, 4);
+        });
+      }
+
+      function drawEnemyBody(enemy) {
+        const x = enemy.x;
+        const y = enemy.y;
+        if (enemy.type === "slime") {
+          ctx.fillStyle = enemy.color;
+          ctx.beginPath();
+          ctx.arc(x, y, 14, Math.PI, 0);
+          ctx.quadraticCurveTo(x + 14, y + 16, x, y + 18);
+          ctx.quadraticCurveTo(x - 14, y + 16, x - 14, y);
+          ctx.closePath();
+          ctx.fill();
+        } else if (enemy.type === "golem") {
+          ctx.fillStyle = enemy.color;
+          ctx.fillRect(x - 16, y - 16, 32, 32);
+          ctx.fillStyle = "rgba(255, 255, 255, 0.2)";
+          ctx.fillRect(x - 16, y - 16, 10, 10);
+          ctx.fillStyle = "rgba(0, 0, 0, 0.15)";
+          ctx.fillRect(x + 6, y + 6, 10, 10);
+        } else {
+          ctx.fillStyle = enemy.color;
+          ctx.beginPath();
+          ctx.arc(x, y - 4, 12, Math.PI, 0);
+          ctx.lineTo(x + 12, y + 12);
+          ctx.quadraticCurveTo(x + 6, y + 16, x, y + 12);
+          ctx.quadraticCurveTo(x - 6, y + 16, x - 12, y + 12);
+          ctx.closePath();
+          ctx.fill();
+        }
+
+        ctx.fillStyle = "#1f1f1f";
+        ctx.beginPath();
+        ctx.arc(x - 5, y - 2, 2.5, 0, Math.PI * 2);
+        ctx.arc(x + 5, y - 2, 2.5, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      function drawEnemies() {
+        game.enemies.forEach((enemy) => {
+          drawEnemyBody(enemy);
+          const ratio = clamp(enemy.hp / enemy.maxHp, 0, 1);
+          ctx.fillStyle = "rgba(0,0,0,0.25)";
+          ctx.fillRect(enemy.x - 16, enemy.y - 22, 32, 4);
+          ctx.fillStyle = "#ffbe0b";
+          ctx.fillRect(enemy.x - 16, enemy.y - 22, 32 * ratio, 4);
+        });
+      }
+
+      function drawPlayer() {
+        const now = performance.now() / 1000;
+        const invuln = now < game.player.invulnUntil;
+        const dodge = now < game.player.dodgeUntil;
+        ctx.save();
+        ctx.translate(game.player.x, game.player.y);
+
+        ctx.fillStyle = "rgba(0, 0, 0, 0.2)";
+        ctx.beginPath();
+        ctx.ellipse(0, 14, 12, 5, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.fillStyle = "#8a5a2b";
+        ctx.fillRect(-12, -6, 8, 14);
+        ctx.strokeStyle = "#633816";
+        ctx.strokeRect(-12, -6, 8, 14);
+
+        ctx.fillStyle = "#3d4a63";
+        ctx.fillRect(-6, 4, 5, 12);
+        ctx.fillRect(1, 4, 5, 12);
+        ctx.fillStyle = "#2b1a0a";
+        ctx.fillRect(-6, 14, 6, 4);
+        ctx.fillRect(1, 14, 6, 4);
+
+        ctx.fillStyle = "#6fa14a";
+        ctx.fillRect(-8, -6, 16, 12);
+        ctx.fillStyle = "#80522a";
+        ctx.fillRect(-8, 2, 16, 3);
+
+        ctx.fillStyle = "#f2c9a0";
+        ctx.fillRect(-11, -4, 4, 10);
+        ctx.fillRect(7, -4, 4, 10);
+
+        ctx.fillStyle = "#f2c9a0";
+        ctx.beginPath();
+        ctx.arc(0, -16, 7, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.fillStyle = "#5e5e6b";
+        ctx.beginPath();
+        ctx.arc(0, -18, 8, Math.PI, 0);
+        ctx.fill();
+        ctx.fillRect(-8, -18, 16, 6);
+
+        ctx.fillStyle = "#f7e1b3";
+        ctx.beginPath();
+        ctx.moveTo(-6, -22);
+        ctx.lineTo(-14, -26);
+        ctx.lineTo(-7, -20);
+        ctx.closePath();
+        ctx.fill();
+        ctx.beginPath();
+        ctx.moveTo(6, -22);
+        ctx.lineTo(14, -26);
+        ctx.lineTo(7, -20);
+        ctx.closePath();
+        ctx.fill();
+
+        if (game.player.weaponIndex === 0) {
+          ctx.strokeStyle = "#6b3a1a";
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.moveTo(10, -2);
+          ctx.lineTo(18, -10);
+          ctx.stroke();
+          ctx.strokeStyle = "#e8d6a8";
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.arc(18, -10, 6, Math.PI * 0.15, Math.PI * 1.05);
+          ctx.stroke();
+        } else {
+          ctx.strokeStyle = "#6b3a1a";
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.moveTo(10, -2);
+          ctx.lineTo(22, -16);
+          ctx.stroke();
+          ctx.fillStyle = "#e4e0db";
+          ctx.beginPath();
+          ctx.moveTo(22, -16);
+          ctx.lineTo(27, -12);
+          ctx.lineTo(20, -10);
+          ctx.closePath();
+          ctx.fill();
+        }
+
+        if (dodge) {
+          ctx.strokeStyle = "rgba(255, 255, 255, 0.6)";
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.arc(0, 4, 18, 0, Math.PI * 2);
+          ctx.stroke();
+        } else if (invuln) {
+          ctx.strokeStyle = "rgba(255, 210, 120, 0.6)";
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.arc(0, 4, 16, 0, Math.PI * 2);
+          ctx.stroke();
+        }
+
+        ctx.restore();
+      }
+
+      function drawProjectiles() {
+        game.projectiles.forEach((shot) => {
+          ctx.fillStyle = shot.color;
+          ctx.beginPath();
+          ctx.arc(shot.x, shot.y, shot.radius, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.fillStyle = "rgba(255, 255, 255, 0.6)";
+          ctx.beginPath();
+          ctx.arc(shot.x - 1, shot.y - 1, Math.max(1, shot.radius * 0.5), 0, Math.PI * 2);
+          ctx.fill();
+        });
+      }
+
+      function drawEffects() {
+        game.effects.forEach((effect) => {
+          ctx.strokeStyle = effect.color;
+          ctx.globalAlpha = clamp(effect.ttl / 0.15, 0, 1);
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.moveTo(effect.x1, effect.y1);
+          ctx.lineTo(effect.x2, effect.y2);
+          ctx.stroke();
+          ctx.globalAlpha = 1;
+          ctx.lineWidth = 1;
+        });
+      }
+
+      function drawSelection() {
+        if (game.phase !== "persiapan") return;
+        const cell = hoverCell || selectedCell;
+        if (!cell) return;
+        const x = gridStartX + cell.col * cellSize;
+        const y = cell.row * cellSize;
+        ctx.strokeStyle = "rgba(255,255,255,0.8)";
+        ctx.lineWidth = 2;
+        ctx.strokeRect(x + 3, y + 3, cellSize - 6, cellSize - 6);
+        ctx.lineWidth = 1;
+      }
+
+      function draw() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        drawBackground();
+        drawGrid();
+        drawCore();
+        drawPlants();
+        drawEnemies();
+        drawPlayer();
+        drawProjectiles();
+        drawEffects();
+        drawSelection();
+
+        if (game.paused) {
+          ctx.fillStyle = "rgba(0,0,0,0.35)";
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+          ctx.fillStyle = "#fff";
+          ctx.font = "bold 22px Changa One";
+          ctx.textAlign = "center";
+          ctx.textBaseline = "middle";
+          ctx.fillText("JEDA", canvas.width / 2, canvas.height / 2);
+          ctx.textAlign = "left";
+          ctx.textBaseline = "alphabetic";
+        }
+      }
+
+      function resetGame() {
+        game.day = 1;
+        game.phase = "persiapan";
+        game.coins = 60;
+        game.materials = 4;
+        game.trophies = 0;
+        game.seeds = { mage: 0, slow: 0, heal: 0, buff: 0 };
+        game.core = { hp: 120, maxHp: 120 };
+        game.lives = 3;
+        game.xp = 0;
+        game.level = 1;
+        game.skillPoints = 0;
+        game.skills = { farming: 0, exploration: 0, combat: 0 };
+        game.bonuses = {
+          plantDamage: 0,
+          playerDamage: 0,
+          slowBonus: 0,
+          coinsBonus: 0,
+          plantCostDiscount: 0,
+          dailySeedBonus: 0,
+        };
+        game.relics = [];
+        game.weather = { name: "Cerah", desc: "", coinsBonus: 0, enemySpeed: 0, healBonus: 0 };
+        game.plants = [];
+        game.enemies = [];
+        game.projectiles = [];
+        game.effects = [];
+        game.spawnQueue = [];
+        game.waveTimer = 0;
+        game.explorationDone = false;
+        game.kills = 0;
+        game.paused = false;
+        game.player = {
+          x: gridStartX + 20,
+          y: boardHeight / 2,
+          speed: 140,
+          weaponIndex: 0,
+          cooldown: 0,
+          invulnUntil: 0,
+          dodgeUntil: 0,
+          dodgeCooldownUntil: 0,
+        };
+        selectedPlant = "mage";
+        selectedCell = { row: 2, col: 2 };
+        hoverCell = null;
+        harvestMode = false;
+        ui.toggleHarvest.textContent = "Mode Panen: Mati";
+        grantDailySeeds();
+        ui.log.innerHTML = "";
+        rollWeather();
+        log("Hari baru dimulai. Tanam dan bersiap.");
+        updateUI();
+      }
+
+      function openCharacterMenu() {
+        const body = `
+          <p>Level ${game.level} | XP ${game.xp} | Poin kemampuan ${game.skillPoints}</p>
+          <div class="char-grid">
+            <div class="char-item">
+              <span>Bertani (bonus koin)</span>
+              <button data-skill="farming">Tambah</button>
+            </div>
+            <div class="char-item">
+              <span>Eksplorasi (hasil lebih besar)</span>
+              <button data-skill="exploration">Tambah</button>
+            </div>
+            <div class="char-item">
+              <span>Pertempuran (serangan petani)</span>
+              <button data-skill="combat">Tambah</button>
+            </div>
+          </div>
+        `;
+        showOverlay("Menu Karakter", body, [
+          { label: "Tutup", className: "secondary", onClick: hideOverlay },
+        ]);
+        ui.overlayBody.querySelectorAll("button[data-skill]").forEach((button) => {
+          button.addEventListener("click", () => {
+            if (game.skillPoints <= 0) return;
+            const skill = button.dataset.skill;
+            game.skills[skill] += 1;
+            game.skillPoints -= 1;
+            openCharacterMenu();
+            updateUI();
+          });
+        });
+      }
+
+      ui.startDefense.addEventListener("click", startDefense);
+      ui.toUpgrade.addEventListener("click", openUpgradePhase);
+      ui.nextDay.addEventListener("click", nextDay);
+      ui.resetGame.addEventListener("click", resetGame);
+      ui.toggleHarvest.addEventListener("click", () => {
+        harvestMode = !harvestMode;
+        ui.toggleHarvest.textContent = `Mode Panen: ${harvestMode ? "Nyala" : "Mati"}`;
+      });
+      ui.exploreForest.addEventListener("click", () => exploreArea("hutan"));
+      ui.exploreCave.addEventListener("click", () => exploreArea("gua"));
+      ui.exploreSwamp.addEventListener("click", () => exploreArea("rawa"));
+      ui.upgradeCore.addEventListener("click", upgradeCore);
+      ui.upgradePlants.addEventListener("click", upgradePlants);
+      ui.upgradePlayer.addEventListener("click", upgradePlayer);
+      ui.upgradeFarm.addEventListener("click", upgradeFarm);
+
+      function handleCanvasClick(event) {
+        const rect = canvas.getBoundingClientRect();
+        const scaleX = canvas.width / rect.width;
+        const scaleY = canvas.height / rect.height;
+        const x = (event.clientX - rect.left) * scaleX;
+        const y = (event.clientY - rect.top) * scaleY;
+
+        if (game.phase === "pertahanan") {
+          shootAt(x, y);
+          return;
+        }
+
+        if (game.phase === "persiapan") {
+          const cell = getCellAt(x, y);
+          if (cell) {
+            selectedCell = cell;
+            placePlant(cell.row, cell.col);
+          }
+        }
+      }
+
+      canvas.addEventListener("mousemove", (event) => {
+        const rect = canvas.getBoundingClientRect();
+        const scaleX = canvas.width / rect.width;
+        const scaleY = canvas.height / rect.height;
+        const x = (event.clientX - rect.left) * scaleX;
+        const y = (event.clientY - rect.top) * scaleY;
+        hoverCell = getCellAt(x, y);
+      });
+
+      canvas.addEventListener("mouseleave", () => {
+        hoverCell = null;
+      });
+
+      canvas.addEventListener("click", handleCanvasClick);
+      canvas.addEventListener(
+        "wheel",
+        (event) => {
+          if (game.phase !== "pertahanan") return;
+          event.preventDefault();
+          const dir = event.deltaY > 0 ? 1 : -1;
+          game.player.weaponIndex =
+            (game.player.weaponIndex + dir + weapons.length) % weapons.length;
+          updateUI();
+        },
+        { passive: false }
+      );
+
+      window.addEventListener("keydown", (event) => {
+        const key = event.key.toLowerCase();
+        if (key === "escape") {
+          if (ui.overlay.classList.contains("show")) {
+            hideOverlay();
+            return;
+          }
+          game.paused = !game.paused;
+          return;
+        }
+        if (key === "e") {
+          if (!ui.overlay.classList.contains("show")) {
+            openCharacterMenu();
+          }
+          return;
+        }
+        if (game.paused) return;
+        if (key === "f") {
+          if (game.phase === "persiapan") {
+            placePlant(selectedCell.row, selectedCell.col);
+          }
+          return;
+        }
+        if (event.code === "Space") {
+          const now = performance.now() / 1000;
+          if (game.phase === "pertahanan" && now > game.player.dodgeCooldownUntil) {
+            game.player.dodgeUntil = now + 0.4;
+            game.player.dodgeCooldownUntil = now + 1.6;
+          }
+          return;
+        }
+
+        keys[key] = true;
+
+        if (game.phase !== "pertahanan") {
+          if (key === "w") selectedCell.row = clamp(selectedCell.row - 1, 0, rows - 1);
+          if (key === "s") selectedCell.row = clamp(selectedCell.row + 1, 0, rows - 1);
+          if (key === "a") selectedCell.col = clamp(selectedCell.col - 1, 0, cols - 1);
+          if (key === "d") selectedCell.col = clamp(selectedCell.col + 1, 0, cols - 1);
+        }
+      });
+
+      window.addEventListener("keyup", (event) => {
+        const key = event.key.toLowerCase();
+        keys[key] = false;
+      });
+
+      let lastTime = performance.now();
+      function loop(timestamp) {
+        const now = timestamp;
+        const dt = Math.min(0.033, (now - lastTime) / 1000);
+        lastTime = now;
+        updateGame(dt);
+        draw();
+        requestAnimationFrame(loop);
+      }
+
+      resetGame();
+      requestAnimationFrame(loop);
+    </script>
+  </body>
+</html>
