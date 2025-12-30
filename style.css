@@ -419,3 +419,109 @@
           grid-template-columns: 1fr;
         }
       }
+
+      body.game-only {
+        padding: 0;
+      }
+
+      body.game-only .app {
+        max-width: none;
+      }
+
+      body.game-only header.hero,
+      body.game-only aside.panel,
+      body.game-only .board-footer {
+        display: none;
+      }
+
+      body.game-only main.grid {
+        grid-template-columns: 1fr;
+        gap: 0;
+        justify-items: center;
+      }
+
+      body.game-only .board-card {
+        padding: 0;
+        background: transparent;
+        border: none;
+        box-shadow: none;
+        border-radius: 0;
+        width: auto;
+        align-items: center;
+      }
+
+      body.game-only .canvas-wrap {
+        padding: 0;
+        border: none;
+        background: none;
+        box-shadow: none;
+        border-radius: 0;
+        display: flex;
+        justify-content: center;
+      }
+
+      body.game-only canvas {
+        border-radius: 0;
+        border: none;
+        box-shadow: none;
+        width: auto;
+        height: auto;
+        max-width: 90vw;
+        max-height: 90vh;
+      }
+
+      .start-screen {
+        position: fixed;
+        inset: 0;
+        display: grid;
+        place-items: center;
+        padding: 24px;
+        background: radial-gradient(circle at 20% 20%, rgba(255, 255, 255, 0.4), transparent 40%),
+          linear-gradient(180deg, #9fd7ff 0%, #cfe9ff 42%, #f6e4c6 100%);
+        z-index: 30;
+      }
+
+      .start-screen.hidden {
+        display: none;
+      }
+
+      .start-card {
+        max-width: 520px;
+        width: min(90vw, 520px);
+        padding: 28px;
+        border-radius: 22px;
+        background: linear-gradient(180deg, #f2c98b 0%, #e4a863 55%, #d28a4a 100%);
+        border: 2px solid var(--wood-shadow);
+        box-shadow: var(--shadow), inset 0 2px 0 rgba(255, 255, 255, 0.4);
+        text-align: center;
+      }
+
+      .start-card h1 {
+        font-family: "Changa One", "Trebuchet MS", sans-serif;
+        margin: 8px 0 6px;
+        font-size: clamp(2.2rem, 3.2vw, 3rem);
+        color: #4f2f14;
+      }
+
+      .start-card p {
+        margin: 0 0 18px;
+        color: #4a2e18;
+      }
+
+      .start-eyebrow {
+        display: inline-block;
+        margin: 0;
+        padding: 6px 12px;
+        border-radius: 999px;
+        text-transform: uppercase;
+        font-size: 0.75rem;
+        letter-spacing: 2px;
+        color: #4f2f14;
+        background: rgba(255, 255, 255, 0.35);
+        border: 1px solid rgba(120, 75, 32, 0.4);
+      }
+
+      .start-card button {
+        padding: 10px 26px;
+        font-weight: 700;
+      }

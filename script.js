@@ -42,6 +42,10 @@ const canvas = document.getElementById("gameCanvas");
         overlayActions: document.getElementById("overlayActions"),
       };
 
+      const startScreen = document.getElementById("startScreen");
+      const startButton = document.getElementById("startButton");
+      let hasStarted = false;
+
       const rows = 5;
       const cols = 9;
       const cellSize = 70;
@@ -329,6 +333,16 @@ const canvas = document.getElementById("gameCanvas");
         if (ui.log.children.length > 12) {
           ui.log.removeChild(ui.log.lastChild);
         }
+      }
+
+      function showStartScreen() {
+        if (!startScreen) return;
+        startScreen.classList.remove("hidden");
+      }
+
+      function hideStartScreen() {
+        if (!startScreen) return;
+        startScreen.classList.add("hidden");
       }
 
       function clamp(value, min, max) {
@@ -741,7 +755,7 @@ const canvas = document.getElementById("gameCanvas");
         ui.overlayTitle.textContent = "";
         ui.overlayBody.innerHTML = "";
         ui.overlayActions.innerHTML = "";
-        game.paused = false;
+        game.paused = !hasStarted;
       }
 
       function showVictory() {
@@ -1756,7 +1770,7 @@ const canvas = document.getElementById("gameCanvas");
         }
         drawHud();
 
-        if (game.paused) {
+        if (game.paused && hasStarted) {
           ctx.fillStyle = "rgba(0,0,0,0.35)";
           ctx.fillRect(0, 0, canvas.width, canvas.height);
           ctx.fillStyle = "#fff";
@@ -1830,6 +1844,18 @@ const canvas = document.getElementById("gameCanvas");
         applyMapTheme();
         log("Gelombang baru dimulai. Tanam dan bersiap.");
         updateUI();
+        if (!hasStarted) {
+          showStartScreen();
+        } else {
+          hideStartScreen();
+        }
+      }
+
+      function startGame() {
+        hasStarted = true;
+        game.paused = false;
+        hideStartScreen();
+        updateUI();
       }
 
       function openCharacterMenu() {
@@ -1869,6 +1895,9 @@ const canvas = document.getElementById("gameCanvas");
       ui.toUpgrade.addEventListener("click", openUpgradePhase);
       ui.nextDay.addEventListener("click", nextDay);
       ui.resetGame.addEventListener("click", resetGame);
+      if (startButton) {
+        startButton.addEventListener("click", startGame);
+      }
       ui.toggleHarvest.addEventListener("click", () => {
         harvestMode = !harvestMode;
         ui.toggleHarvest.textContent = `Mode Panen: ${harvestMode ? "Nyala" : "Mati"}`;
@@ -1887,6 +1916,7 @@ const canvas = document.getElementById("gameCanvas");
         const scaleY = canvas.height / rect.height;
         const x = (event.clientX - rect.left) * scaleX;
         const y = (event.clientY - rect.top) * scaleY;
+        if (!hasStarted) return;
 
         if (game.phase === "pertahanan") {
           shootAt(x, y);
@@ -1931,6 +1961,12 @@ const canvas = document.getElementById("gameCanvas");
 
       window.addEventListener("keydown", (event) => {
         const key = event.key.toLowerCase();
+        if (!hasStarted) {
+          if (key === "enter") {
+            startGame();
+          }
+          return;
+        }
         if (key === "escape") {
           if (ui.overlay.classList.contains("show")) {
             hideOverlay();
