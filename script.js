@@ -40,19 +40,51 @@ const canvas = document.getElementById("gameCanvas");
         overlayTitle: document.getElementById("overlayTitle"),
         overlayBody: document.getElementById("overlayBody"),
         overlayActions: document.getElementById("overlayActions"),
+        armorName: document.getElementById("armorName"),
+        armorPreview: document.getElementById("armorPreview"),
+        armorPrev: document.getElementById("armorPrev"),
+        armorNext: document.getElementById("armorNext"),
+        armorPrice: document.getElementById("armorPrice"),
+        armorAction: document.getElementById("armorAction"),
+        mapSelect: document.getElementById("mapSelect"),
+        levelSelect: document.getElementById("levelSelect"),
+        startDefenseAlt: document.getElementById("startDefenseAlt"),
       };
 
       const startScreen = document.getElementById("startScreen");
       const startButton = document.getElementById("startButton");
       let hasStarted = false;
 
-      const rows = 5;
-      const cols = 9;
-      const cellSize = 70;
-      const coreWidth = 80;
-      const gridStartX = coreWidth;
-      const gridEndX = gridStartX + cols * cellSize;
-      const boardHeight = rows * cellSize;
+      const rows = 6;
+      const cols = 8;
+      let cellSize = 70;
+      const coreWidth = 0;
+      let boardWidth = 0;
+      let boardHeight = 0;
+      let boardOffsetX = 0;
+      let boardOffsetY = 0;
+      let gridStartX = 0;
+      let gridEndX = 0;
+      const coreMarker = { x: 0.5, y: 0.18 };
+      const farmRegion = { x: 0.07, y: 0.226, width: 0.856, height: 0.637 };
+      const coreHitHeight = 28;
+
+      function updateBoardLayout() {
+        const farmX = Math.round(canvas.width * farmRegion.x);
+        const farmY = Math.round(canvas.height * farmRegion.y);
+        const farmWidth = Math.round(canvas.width * farmRegion.width);
+        const farmHeight = Math.round(canvas.height * farmRegion.height);
+
+        cellSize = Math.max(20, Math.floor(Math.min(farmWidth / cols, farmHeight / rows)));
+        boardWidth = coreWidth + cols * cellSize;
+        boardHeight = rows * cellSize;
+        boardOffsetX = Math.round(farmX + (farmWidth - boardWidth) / 2);
+        boardOffsetY = Math.round(farmY + (farmHeight - boardHeight) / 2);
+        gridStartX = boardOffsetX + coreWidth;
+        gridEndX = gridStartX + cols * cellSize;
+      }
+
+      updateBoardLayout();
 
       const phaseLabels = {
         persiapan: "Persiapan",
@@ -112,15 +144,177 @@ const canvas = document.getElementById("gameCanvas");
       };
 
       const enemyDefs = {
-        slime: { name: "Lendir", hp: 32, speed: 28, damage: 14, color: "#6ce0c6" },
-        golem: { name: "Golem", hp: 70, speed: 16, damage: 22, color: "#a98467" },
-        specter: { name: "Arwah", hp: 44, speed: 22, damage: 16, color: "#cdb4db" },
+        orc: { name: "Orc", hp: 42, speed: 26, damage: 14, color: "#6ce0c6" },
+        orcRogue: { name: "Orc Rogue", hp: 36, speed: 30, damage: 12, color: "#6aa9e6" },
+        orcShaman: { name: "Orc Shaman", hp: 38, speed: 22, damage: 13, color: "#a0c4ff" },
+        orcWarrior: { name: "Orc Warrior", hp: 70, speed: 18, damage: 22, color: "#a98467" },
+        skeleton: { name: "Skeleton", hp: 40, speed: 24, damage: 14, color: "#cdb4db" },
+        skeletonMage: { name: "Skeleton Mage", hp: 34, speed: 20, damage: 15, color: "#d6ccc2" },
+        skeletonRogue: { name: "Skeleton Rogue", hp: 36, speed: 28, damage: 12, color: "#a9def9" },
+        skeletonWarrior: { name: "Skeleton Warrior", hp: 52, speed: 20, damage: 18, color: "#c7b9a7" },
       };
 
       const weapons = [
-        { name: "Sabit", damage: 8, cooldown: 0.35, speed: 520, color: "#f4d35e", radius: 4 },
-        { name: "Tombak", damage: 14, cooldown: 0.7, speed: 420, color: "#ee964b", radius: 5 },
+        {
+          id: "pedang",
+          name: "Pedang",
+          type: "melee",
+          damage: 10,
+          cooldown: 0.45,
+          range: 58,
+          arc: 1.4,
+          icon: "assets/senjata/pedang.png",
+          holdScale: 0.7,
+          holdDistance: 16,
+          holdOffsetY: 6,
+          attackType: "slice",
+          effectColor: "#d6f3ff",
+          effectWidth: 12,
+        },
+        {
+          id: "pedangPanjang",
+          name: "Pedang Panjang",
+          type: "melee",
+          damage: 12,
+          cooldown: 0.55,
+          range: 70,
+          arc: 1.2,
+          icon: "assets/senjata/pedang panjang.png",
+          holdScale: 0.76,
+          holdDistance: 18,
+          holdOffsetY: 4,
+          attackType: "slice",
+          effectColor: "#c9e7ff",
+          effectWidth: 14,
+        },
+        {
+          id: "kapak",
+          name: "Kapak",
+          type: "melee",
+          damage: 14,
+          cooldown: 0.65,
+          range: 54,
+          arc: 1.2,
+          icon: "assets/senjata/kapak.png",
+          holdScale: 0.74,
+          holdDistance: 14,
+          holdOffsetY: 8,
+          attackType: "slice",
+          effectColor: "#ffd7b1",
+          effectWidth: 16,
+        },
+        {
+          id: "pisau",
+          name: "Pisau",
+          type: "melee",
+          damage: 7,
+          cooldown: 0.28,
+          range: 42,
+          arc: 1.6,
+          icon: "assets/senjata/pisau.png",
+          holdScale: 0.6,
+          holdDistance: 12,
+          holdOffsetY: 6,
+          attackType: "slice",
+          effectColor: "#e2f3ff",
+          effectWidth: 10,
+        },
+        {
+          id: "pecut",
+          name: "Pecut",
+          type: "melee",
+          damage: 9,
+          cooldown: 0.48,
+          range: 88,
+          arc: 0.9,
+          icon: "assets/senjata/pecut.png",
+          holdScale: 0.75,
+          holdDistance: 18,
+          holdOffsetY: 2,
+          attackType: "slice",
+          effectColor: "#ffe1f5",
+          effectWidth: 12,
+        },
+        {
+          id: "tombak",
+          name: "Tombak",
+          type: "throw",
+          damage: 16,
+          cooldown: 0.85,
+          speed: 560,
+          icon: "assets/senjata/tombak.png",
+          holdScale: 0.8,
+          holdDistance: 18,
+          holdOffsetY: 6,
+          projectileSrc: "assets/senjata/tombak.png",
+          projectileSize: 26,
+          spawnOffset: 20,
+          attackType: "pierce",
+        },
+        {
+          id: "panah",
+          name: "Busur & Panah",
+          type: "bow",
+          damage: 10,
+          cooldown: 0.55,
+          speed: 640,
+          icon: "assets/senjata/panah.png",
+          holdScale: 0.65,
+          holdDistance: 14,
+          holdOffsetY: 4,
+          projectileSrc: "assets/senjata/panah.png",
+          projectileSize: 20,
+          spawnOffset: 18,
+          attackType: "pierce",
+        },
       ];
+
+      const armorOptions = [
+        { id: "none", name: "Tanpa armor", src: null, price: 0 },
+        {
+          id: "robe",
+          name: "Jubah penyihir",
+          src: "assets/armor/armour01magiciansrobe.png",
+          price: 18,
+        },
+        {
+          id: "shirt",
+          name: "Baju putih",
+          src: "assets/armor/armour02whiteshirt.png",
+          price: 12,
+        },
+        {
+          id: "velvet",
+          name: "Baju beludru",
+          src: "assets/armor/armour03velvetoutfit.png",
+          price: 16,
+        },
+        {
+          id: "chain",
+          name: "Baju rantai",
+          src: "assets/armor/armour04chainmail.png",
+          price: 26,
+        },
+        {
+          id: "monk",
+          name: "Jubah biksu",
+          src: "assets/armor/armour05monksrobe.png",
+          price: 14,
+        },
+        {
+          id: "plate",
+          name: "Baju plat",
+          src: "assets/armor/armour05platemail.png",
+          price: 32,
+        },
+        {
+          id: "leather",
+          name: "Baju kulit",
+          src: "assets/armor/armour07leatherjerkin.png",
+          price: 20,
+        },
+      ];
+      let selectedArmorIndex = 0;
 
       const relicPool = [
         { name: "Relik Penjaga", effect: { coreMax: 15 } },
@@ -194,37 +388,229 @@ const canvas = document.getElementById("gameCanvas");
       ];
 
       const maxWavesPerMap = 5;
+      const maxSelectableLevel = 10;
 
       const spriteSheets = {
         player: {
-          idleDown: { src: "assets/sprites/player/Idle_Down.png", frames: 4 },
-          idleSide: { src: "assets/sprites/player/Idle_Side.png", frames: 4 },
-          idleUp: { src: "assets/sprites/player/Idle_Up.png", frames: 4 },
-          runDown: { src: "assets/sprites/player/Run_Down.png", frames: 6 },
-          runSide: { src: "assets/sprites/player/Run_Side.png", frames: 6 },
-          runUp: { src: "assets/sprites/player/Run_Up.png", frames: 6 },
+          idleDown: { src: "assets/Animations/Idle_Base/Idle_Down-Sheet.png", frames: 4 },
+          idleSide: { src: "assets/Animations/Idle_Base/Idle_Side-Sheet.png", frames: 4 },
+          idleUp: { src: "assets/Animations/Idle_Base/Idle_Up-Sheet.png", frames: 4 },
+          runDown: { src: "assets/Animations/Run_Base/Run_Down-Sheet.png", frames: 6 },
+          runSide: { src: "assets/Animations/Run_Base/Run_Side-Sheet.png", frames: 6 },
+          runUp: { src: "assets/Animations/Run_Base/Run_Up-Sheet.png", frames: 6 },
+          hitDown: { src: "assets/Animations/Hit_Base/Hit_Down-Sheet.png", frames: 4 },
+          hitSide: { src: "assets/Animations/Hit_Base/Hit_Side-Sheet.png", frames: 4 },
+          hitUp: { src: "assets/Animations/Hit_Base/Hit_Up-Sheet.png", frames: 4 },
+          deathDown: { src: "assets/Animations/Death_Base/Death_Down-Sheet.png", frames: 8 },
+          deathSide: { src: "assets/Animations/Death_Base/Death_Side-Sheet.png", frames: 8 },
+          deathUp: { src: "assets/Animations/Death_Base/Death_Up-Sheet.png", frames: 8 },
+          sliceDown: { src: "assets/Animations/Slice_Base/Slice_Down-Sheet.png", frames: 8 },
+          sliceSide: { src: "assets/Animations/Slice_Base/Slice_Side-Sheet.png", frames: 8 },
+          sliceUp: { src: "assets/Animations/Slice_Base/Slice_Up-Sheet.png", frames: 8 },
+          pierceDown: { src: "assets/Animations/Pierce_Base/Pierce_Down-Sheet.png", frames: 8 },
+          pierceSide: { src: "assets/Animations/Pierce_Base/Pierce_Side-Sheet.png", frames: 8 },
+          pierceUp: { src: "assets/Animations/Pierce_Base/Pierce_Top-Sheet.png", frames: 8 },
           frameW: 64,
           frameH: 64,
         },
         enemies: {
-          slime: { src: "assets/sprites/enemies/orc.png", frames: 6 },
-          golem: { src: "assets/sprites/enemies/orc_warrior.png", frames: 6 },
-          specter: { src: "assets/sprites/enemies/skeleton.png", frames: 6 },
-          frameW: 64,
-          frameH: 64,
+          orc: {
+            idle: {
+              src: "assets/enemies/Orc Crew/Orc/Idle/Idle-Sheet.png",
+              frames: 4,
+              frameW: 32,
+              frameH: 32,
+            },
+            run: {
+              src: "assets/enemies/Orc Crew/Orc/Run/Run-Sheet.png",
+              frames: 6,
+              frameW: 64,
+              frameH: 64,
+            },
+            death: {
+              src: "assets/enemies/Orc Crew/Orc/Death/Death-Sheet.png",
+              frames: 6,
+              frameW: 64,
+              frameH: 64,
+            },
+          },
+          orcRogue: {
+            idle: {
+              src: "assets/enemies/Orc Crew/Orc - Rogue/Idle/Idle-Sheet.png",
+              frames: 4,
+              frameW: 32,
+              frameH: 32,
+            },
+            run: {
+              src: "assets/enemies/Orc Crew/Orc - Rogue/Run/Run-Sheet.png",
+              frames: 6,
+              frameW: 64,
+              frameH: 64,
+            },
+            death: {
+              src: "assets/enemies/Orc Crew/Orc - Rogue/Death/Death-Sheet.png",
+              frames: 6,
+              frameW: 64,
+              frameH: 64,
+            },
+          },
+          orcShaman: {
+            idle: {
+              src: "assets/enemies/Orc Crew/Orc - Shaman/Idle/Idle-Sheet.png",
+              frames: 4,
+              frameW: 32,
+              frameH: 32,
+            },
+            run: {
+              src: "assets/enemies/Orc Crew/Orc - Shaman/Run/Run-Sheet.png",
+              frames: 6,
+              frameW: 64,
+              frameH: 64,
+            },
+            death: {
+              src: "assets/enemies/Orc Crew/Orc - Shaman/Death/Death-Sheet.png",
+              frames: 7,
+              frameW: 64,
+              frameH: 64,
+            },
+          },
+          orcWarrior: {
+            idle: {
+              src: "assets/enemies/Orc Crew/Orc - Warrior/Idle/Idle-Sheet.png",
+              frames: 4,
+              frameW: 32,
+              frameH: 32,
+            },
+            run: {
+              src: "assets/enemies/Orc Crew/Orc - Warrior/Run/Run-Sheet.png",
+              frames: 6,
+              frameW: 64,
+              frameH: 64,
+            },
+            death: {
+              src: "assets/enemies/Orc Crew/Orc - Warrior/Death/Death-Sheet.png",
+              frames: 9,
+              frameW: 64,
+              frameH: 80,
+            },
+          },
+          skeleton: {
+            idle: {
+              src: "assets/enemies/Skeleton Crew/Skeleton - Base/Idle/Idle-Sheet.png",
+              frames: 4,
+              frameW: 32,
+              frameH: 32,
+            },
+            run: {
+              src: "assets/enemies/Skeleton Crew/Skeleton - Base/Run/Run-Sheet.png",
+              frames: 6,
+              frameW: 64,
+              frameH: 64,
+            },
+            death: {
+              src: "assets/enemies/Skeleton Crew/Skeleton - Base/Death/Death-Sheet.png",
+              frames: 12,
+              frameW: 64,
+              frameH: 64,
+            },
+          },
+          skeletonMage: {
+            idle: {
+              src: "assets/enemies/Skeleton Crew/Skeleton - Mage/Idle/Idle-Sheet.png",
+              frames: 4,
+              frameW: 32,
+              frameH: 32,
+            },
+            run: {
+              src: "assets/enemies/Skeleton Crew/Skeleton - Mage/Run/Run-Sheet.png",
+              frames: 6,
+              frameW: 64,
+              frameH: 64,
+            },
+            death: {
+              src: "assets/enemies/Skeleton Crew/Skeleton - Mage/Death/Death-Sheet.png",
+              frames: 6,
+              frameW: 64,
+              frameH: 64,
+            },
+          },
+          skeletonRogue: {
+            idle: {
+              src: "assets/enemies/Skeleton Crew/Skeleton - Rogue/Idle/Idle-Sheet.png",
+              frames: 4,
+              frameW: 32,
+              frameH: 32,
+            },
+            run: {
+              src: "assets/enemies/Skeleton Crew/Skeleton - Rogue/Run/Run-Sheet.png",
+              frames: 6,
+              frameW: 64,
+              frameH: 64,
+            },
+            death: {
+              src: "assets/enemies/Skeleton Crew/Skeleton - Rogue/Death/Death-Sheet.png",
+              frames: 6,
+              frameW: 64,
+              frameH: 64,
+            },
+          },
+          skeletonWarrior: {
+            idle: {
+              src: "assets/enemies/Skeleton Crew/Skeleton - Warrior/Idle/Idle-Sheet.png",
+              frames: 4,
+              frameW: 32,
+              frameH: 32,
+            },
+            run: {
+              src: "assets/enemies/Skeleton Crew/Skeleton - Warrior/Run/Run-Sheet.png",
+              frames: 6,
+              frameW: 64,
+              frameH: 64,
+            },
+            death: {
+              src: "assets/enemies/Skeleton Crew/Skeleton - Warrior/Death/Death-Sheet.png",
+              frames: 6,
+              frameW: 64,
+              frameH: 48,
+            },
+          },
         },
       };
 
       const spriteImages = {};
       let spritesLoaded = false;
+      const playerAnimRates = {
+        idle: 6,
+        run: 10,
+        hit: 12,
+        attack: 12,
+        death: 10,
+      };
+      const enemyAnimRates = {
+        idle: 4,
+        run: 8,
+        death: 10,
+      };
+      const enemyBaseSize = 64;
 
       function loadSprites() {
         const sources = [];
         Object.values(spriteSheets.player).forEach((item) => {
           if (item && item.src) sources.push(item.src);
         });
-        Object.values(spriteSheets.enemies).forEach((item) => {
-          if (item && item.src) sources.push(item.src);
+        Object.values(spriteSheets.enemies).forEach((enemy) => {
+          if (!enemy) return;
+          ["idle", "run", "death"].forEach((state) => {
+            const sheet = enemy[state];
+            if (sheet && sheet.src) sources.push(sheet.src);
+          });
+        });
+        armorOptions.forEach((armor) => {
+          if (armor && armor.src) sources.push(armor.src);
+        });
+        weapons.forEach((weapon) => {
+          if (weapon && weapon.icon) sources.push(weapon.icon);
+          if (weapon && weapon.projectileSrc) sources.push(weapon.projectileSrc);
         });
         Object.values(tileSheets).forEach((item) => {
           if (item && item.src) sources.push(item.src);
@@ -300,6 +686,7 @@ const canvas = document.getElementById("gameCanvas");
         relics: [],
         weather: { name: "Normal", desc: "", coinsBonus: 0, enemySpeed: 0, healBonus: 0 },
         mapData: null,
+        armorOwned: { none: true },
         plants: [],
         enemies: [],
         projectiles: [],
@@ -311,7 +698,7 @@ const canvas = document.getElementById("gameCanvas");
         explorationDone: false,
         player: {
           x: gridStartX + 20,
-          y: boardHeight / 2,
+          y: boardOffsetY + boardHeight / 2,
           speed: 140,
           weaponIndex: 0,
           cooldown: 0,
@@ -321,6 +708,12 @@ const canvas = document.getElementById("gameCanvas");
           facing: "down",
           moving: false,
           animTime: 0,
+          state: "normal",
+          stateTime: 0,
+          stateDuration: 0,
+          attackType: "slice",
+          attackAngle: 0,
+          armorIndex: selectedArmorIndex,
           hp: 100,
           maxHp: 100,
         },
@@ -349,6 +742,259 @@ const canvas = document.getElementById("gameCanvas");
         return Math.min(Math.max(value, min), max);
       }
 
+      function startPlayerState(state, duration, attackType) {
+        if (game.player.state === "dead" && state !== "dead") return;
+        game.player.state = state;
+        game.player.stateTime = 0;
+        game.player.stateDuration = duration;
+        if (attackType) {
+          game.player.attackType = attackType;
+        }
+      }
+
+      function faceTowards(dx, dy) {
+        if (Math.abs(dx) > Math.abs(dy)) {
+          game.player.facing = dx < 0 ? "left" : "right";
+        } else {
+          game.player.facing = dy < 0 ? "up" : "down";
+        }
+      }
+
+      function getFacingAngle(facing) {
+        if (facing === "up") return -Math.PI / 2;
+        if (facing === "down") return Math.PI / 2;
+        if (facing === "left") return Math.PI;
+        return 0;
+      }
+
+      function normalizeAngle(angle) {
+        let value = angle;
+        while (value > Math.PI) value -= Math.PI * 2;
+        while (value < -Math.PI) value += Math.PI * 2;
+        return value;
+      }
+
+      function angleDiff(a, b) {
+        return Math.abs(normalizeAngle(a - b));
+      }
+
+      function getAttackDuration(attackType) {
+        const sprites = spriteSheets.player;
+        const sheet = attackType === "pierce" ? sprites.pierceDown : sprites.sliceDown;
+        return sheet.frames / playerAnimRates.attack;
+      }
+
+      function getEnemySprite(type) {
+        return spriteSheets.enemies[type] || null;
+      }
+
+      function getEnemySheet(enemy, state) {
+        const sprite = getEnemySprite(enemy.type);
+        if (!sprite) return null;
+        if (state === "death") return sprite.death;
+        if (state === "idle") return sprite.idle;
+        return sprite.run;
+      }
+
+      function startEnemyDeath(enemy) {
+        if (enemy.state === "dead") return;
+        enemy.state = "dead";
+        enemy.stateTime = 0;
+        const sheet = getEnemySheet(enemy, "death");
+        const frames = sheet ? sheet.frames : 0;
+        enemy.deathDuration = frames ? frames / enemyAnimRates.death : 0.6;
+      }
+
+      function applyEnemyDamage(enemy, damage) {
+        if (enemy.state === "dead") return;
+        enemy.hp -= damage;
+        if (enemy.hp <= 0) {
+          enemy.hp = 0;
+          startEnemyDeath(enemy);
+        }
+      }
+
+      function performMeleeAttack(weapon, angle) {
+        const originX = game.player.x;
+        const originY = game.player.y;
+        const damage =
+          weapon.damage * (1 + game.bonuses.playerDamage + game.skills.combat * 0.03);
+        const range = weapon.range;
+        const arc = weapon.arc;
+        game.enemies.forEach((enemy) => {
+          if (enemy.state === "dead") return;
+          const dx = enemy.x - originX;
+          const dy = enemy.y - originY;
+          const dist = Math.hypot(dx, dy);
+          if (dist > range) return;
+          const dir = Math.atan2(dy, dx);
+          if (angleDiff(dir, angle) > arc / 2) return;
+          applyEnemyDamage(enemy, damage);
+        });
+        game.effects.push({
+          type: "slash",
+          x: originX,
+          y: originY,
+          angle,
+          radius: range,
+          arc,
+          width: weapon.effectWidth || 12,
+          color: weapon.effectColor || "#d6f3ff",
+          ttl: 0.2,
+          life: 0.2,
+        });
+      }
+
+      function spawnProjectile(weapon, angle) {
+        const offset = weapon.spawnOffset || weapon.holdDistance || 14;
+        const originX = game.player.x + Math.cos(angle) * offset;
+        const originY = game.player.y + Math.sin(angle) * offset;
+        const vx = Math.cos(angle) * weapon.speed;
+        const vy = Math.sin(angle) * weapon.speed;
+        const damage =
+          weapon.damage * (1 + game.bonuses.playerDamage + game.skills.combat * 0.03);
+        game.projectiles.push({
+          x: originX,
+          y: originY,
+          vx,
+          vy,
+          damage,
+          radius: Math.max(8, Math.round((weapon.projectileSize || 18) * 0.45)),
+          spriteSrc: weapon.projectileSrc || weapon.icon,
+          size: weapon.projectileSize || 18,
+          rotation: angle,
+          hit: false,
+        });
+      }
+
+      function getWeaponDrawAngle(player, weapon) {
+        const baseAngle = Number.isFinite(player.attackAngle)
+          ? player.attackAngle
+          : getFacingAngle(player.facing);
+        if (player.state === "attack") {
+          if (weapon.type === "melee") {
+            const progress =
+              player.stateDuration > 0
+                ? clamp(player.stateTime / player.stateDuration, 0, 1)
+                : 0;
+            const swing = (progress - 0.5) * (weapon.arc || 1.2);
+            return baseAngle + swing;
+          }
+          return baseAngle;
+        }
+        return getFacingAngle(player.facing);
+      }
+
+      function drawHeldWeapon(player) {
+        if (player.state === "dead") return;
+        const weapon = weapons[player.weaponIndex];
+        if (!weapon || !weapon.icon) return;
+        const img = getSpriteImage(weapon.icon);
+        if (!img) return;
+        const angle = getWeaponDrawAngle(player, weapon);
+        const distance = weapon.holdDistance || 14;
+        const offsetY = weapon.holdOffsetY || 0;
+        const dx = Math.cos(angle) * distance;
+        const dy = Math.sin(angle) * distance + offsetY;
+        const baseSize = img.width || 32;
+        const size = Math.round(baseSize * (weapon.holdScale || 0.7));
+
+        ctx.save();
+        ctx.translate(Math.round(player.x + dx), Math.round(player.y + dy));
+        ctx.rotate(angle);
+        ctx.drawImage(img, -size / 2, -size / 2, size, size);
+        ctx.restore();
+      }
+
+      function updateArmorUI() {
+        if (!ui.armorName) return;
+        const armor = armorOptions[selectedArmorIndex];
+        ui.armorName.textContent = armor ? armor.name : "Armor";
+        if (ui.armorPrice) {
+          if (armor && armor.price > 0) {
+            ui.armorPrice.textContent = `Harga: ${armor.price} koin`;
+          } else {
+            ui.armorPrice.textContent = "Harga: Gratis";
+          }
+        }
+        if (ui.armorPreview) {
+          if (armor && armor.src) {
+            ui.armorPreview.src = armor.src;
+            ui.armorPreview.alt = armor.name;
+            ui.armorPreview.style.opacity = "1";
+          } else {
+            ui.armorPreview.removeAttribute("src");
+            ui.armorPreview.alt = "Tanpa armor";
+            ui.armorPreview.style.opacity = "0";
+          }
+        }
+
+        if (ui.armorAction && armor) {
+          const owned = Boolean(game.armorOwned[armor.id]);
+          const equipped = game.player && game.player.armorIndex === selectedArmorIndex;
+          if (!owned) {
+            ui.armorAction.textContent = "Beli";
+            ui.armorAction.disabled = game.coins < armor.price;
+          } else if (equipped) {
+            ui.armorAction.textContent = "Terpasang";
+            ui.armorAction.disabled = true;
+          } else {
+            ui.armorAction.textContent = "Pakai";
+            ui.armorAction.disabled = false;
+          }
+        }
+      }
+
+      function setArmorIndex(index) {
+        const total = armorOptions.length;
+        if (!total) return;
+        const next = ((index % total) + total) % total;
+        selectedArmorIndex = next;
+        updateArmorUI();
+      }
+
+      function equipArmor(index) {
+        const armor = armorOptions[index];
+        if (!armor || !game.armorOwned[armor.id]) return;
+        if (game.player) {
+          game.player.armorIndex = index;
+        }
+        updateArmorUI();
+      }
+
+      function buyArmor(index) {
+        const armor = armorOptions[index];
+        if (!armor || game.armorOwned[armor.id]) return;
+        if (game.coins < armor.price) {
+          log("Koin tidak cukup untuk membeli armor.");
+          return;
+        }
+        game.coins -= armor.price;
+        game.armorOwned[armor.id] = true;
+        log(`Armor ${armor.name} dibeli.`);
+        equipArmor(index);
+        updateUI();
+      }
+
+      function getCoreMarkerPosition() {
+        return {
+          x: canvas.width * coreMarker.x,
+          y: canvas.height * coreMarker.y,
+        };
+      }
+
+      function getCoreHitY() {
+        return getCoreMarkerPosition().y + 12;
+      }
+
+      function syncSelectionToPlayer() {
+        if (game.phase !== "persiapan") return;
+        const cell = getCellAt(game.player.x, game.player.y);
+        if (cell) {
+          selectedCell = cell;
+        }
+      }
+
       function randRange(min, max) {
         return Math.floor(Math.random() * (max - min + 1)) + min;
       }
@@ -365,14 +1011,16 @@ const canvas = document.getElementById("gameCanvas");
       function cellCenter(row, col) {
         return {
           x: gridStartX + col * cellSize + cellSize / 2,
-          y: row * cellSize + cellSize / 2,
+          y: boardOffsetY + row * cellSize + cellSize / 2,
         };
       }
 
       function getCellAt(x, y) {
         if (x < gridStartX || x >= gridEndX) return null;
         const col = Math.floor((x - gridStartX) / cellSize);
-        const row = Math.floor(y / cellSize);
+        const localY = y - boardOffsetY;
+        if (localY < 0 || localY >= boardHeight) return null;
+        const row = Math.floor(localY / cellSize);
         if (row < 0 || row >= rows) return null;
         return { row, col };
       }
@@ -425,6 +1073,72 @@ const canvas = document.getElementById("gameCanvas");
         if (!silent) {
           log(`Memasuki peta ${map.label}. ${map.weather.desc}`);
         }
+      }
+
+      function setupSettingsControls() {
+        if (ui.mapSelect) {
+          ui.mapSelect.innerHTML = "";
+          mapSequence.forEach((map, index) => {
+            const option = document.createElement("option");
+            option.value = String(index);
+            option.textContent = map.label;
+            ui.mapSelect.appendChild(option);
+          });
+        }
+        if (ui.levelSelect) {
+          ui.levelSelect.innerHTML = "";
+          for (let level = 1; level <= maxSelectableLevel; level += 1) {
+            const option = document.createElement("option");
+            option.value = String(level);
+            option.textContent = String(level);
+            ui.levelSelect.appendChild(option);
+          }
+        }
+        syncSettingsControls();
+      }
+
+      function syncSettingsControls() {
+        const disableSelects = game.phase === "pertahanan";
+        if (ui.mapSelect) {
+          ui.mapSelect.value = String(game.mapIndex);
+          ui.mapSelect.disabled = disableSelects;
+        }
+        if (ui.levelSelect) {
+          ui.levelSelect.value = String(game.level);
+          ui.levelSelect.disabled = disableSelects;
+        }
+        if (ui.startDefenseAlt) {
+          ui.startDefenseAlt.disabled = game.phase !== "persiapan";
+        }
+      }
+
+      function setMapIndex(nextIndex) {
+        if (game.phase === "pertahanan") {
+          log("Ganti peta hanya saat bukan pertahanan.");
+          return false;
+        }
+        const safeIndex = clamp(nextIndex, 0, mapSequence.length - 1);
+        if (safeIndex === game.mapIndex) return true;
+        game.mapIndex = safeIndex;
+        applyMapTheme();
+        updateUI();
+        return true;
+      }
+
+      function setLevel(nextLevel) {
+        if (game.phase === "pertahanan") {
+          log("Level hanya bisa diubah saat bukan pertahanan.");
+          return false;
+        }
+        const safeLevel = clamp(nextLevel, 1, maxSelectableLevel);
+        if (safeLevel === game.level) return true;
+        const spent =
+          game.skills.farming + game.skills.exploration + game.skills.combat;
+        game.level = safeLevel;
+        game.xp = 0;
+        game.skillPoints = Math.max(0, safeLevel - 1 - spent);
+        updateUI();
+        return true;
       }
 
       function costWithDiscount(baseCost) {
@@ -497,6 +1211,9 @@ const canvas = document.getElementById("gameCanvas");
       }
 
       function startDefense() {
+        if (!hasStarted) {
+          startGame();
+        }
         if (game.phase !== "persiapan") return;
         game.phase = "pertahanan";
         game.waveTimer = 0;
@@ -505,7 +1222,10 @@ const canvas = document.getElementById("gameCanvas");
         game.lives = 3;
         game.explorationDone = false;
         game.player.x = gridStartX + 20;
-        game.player.y = boardHeight / 2;
+        game.player.y = boardOffsetY + boardHeight / 2;
+        game.player.state = "normal";
+        game.player.stateTime = 0;
+        game.player.stateDuration = 0;
         log(
           `Gelombang ${game.waveInMap} dimulai di peta ${mapSequence[game.mapIndex].label}.`
         );
@@ -517,24 +1237,32 @@ const canvas = document.getElementById("gameCanvas");
         let total = 8 + wave * 2;
         let timeGap = 1.15;
         let pool = [
-          { type: "slime", weight: 0.7 },
-          { type: "specter", weight: 0.3 },
+          { type: "orc", weight: 0.3 },
+          { type: "skeleton", weight: 0.3 },
+          { type: "orcRogue", weight: 0.2 },
+          { type: "skeletonRogue", weight: 0.2 },
         ];
         if (difficulty === "normal") {
           total = 12;
           timeGap = 1.0;
           pool = [
-            { type: "slime", weight: 0.5 },
-            { type: "specter", weight: 0.3 },
-            { type: "golem", weight: 0.2 },
+            { type: "orc", weight: 0.2 },
+            { type: "skeleton", weight: 0.2 },
+            { type: "orcRogue", weight: 0.2 },
+            { type: "skeletonRogue", weight: 0.15 },
+            { type: "orcShaman", weight: 0.15 },
+            { type: "skeletonMage", weight: 0.1 },
           ];
         } else if (difficulty === "sulit") {
           total = 15;
           timeGap = 0.9;
           pool = [
-            { type: "slime", weight: 0.4 },
-            { type: "specter", weight: 0.3 },
-            { type: "golem", weight: 0.3 },
+            { type: "orc", weight: 0.15 },
+            { type: "skeleton", weight: 0.15 },
+            { type: "orcShaman", weight: 0.15 },
+            { type: "skeletonMage", weight: 0.15 },
+            { type: "orcWarrior", weight: 0.2 },
+            { type: "skeletonWarrior", weight: 0.2 },
           ];
         }
 
@@ -552,7 +1280,7 @@ const canvas = document.getElementById("gameCanvas");
         for (let i = 0; i < total; i += 1) {
           const time = i * timeGap + Math.random() * 0.4;
           const type = pickType();
-          queue.push({ time, row: randRange(0, rows - 1), type });
+          queue.push({ time, col: randRange(0, cols - 1), type });
         }
         return queue.sort((a, b) => a.time - b.time);
       }
@@ -849,7 +1577,9 @@ const canvas = document.getElementById("gameCanvas");
           ui.phaseDesc.textContent = "Tingkatkan desa, senjata, dan tanaman.";
         }
 
+        updateArmorUI();
         renderPlantList();
+        syncSettingsControls();
       }
 
       function findEnemyInRange(plant) {
@@ -858,8 +1588,9 @@ const canvas = document.getElementById("gameCanvas");
         let target = null;
         let closest = Infinity;
         game.enemies.forEach((enemy) => {
-          if (enemy.row !== plant.row) return;
-          const dist = Math.abs(enemy.x - center.x);
+          if (enemy.state === "dead") return;
+          if (enemy.col !== plant.col) return;
+          const dist = Math.abs(enemy.y - center.y);
           if (dist <= def.range && dist < closest) {
             closest = dist;
             target = enemy;
@@ -912,8 +1643,8 @@ const canvas = document.getElementById("gameCanvas");
             const multiplier =
               (1 + game.bonuses.plantDamage) * getBuffMultiplier(plant);
             const damage = def.damage * multiplier;
-            enemy.hp -= damage;
-            if (plant.type === "slow") {
+            applyEnemyDamage(enemy, damage);
+            if (plant.type === "slow" && enemy.state !== "dead") {
               enemy.slowUntil = Math.max(
                 enemy.slowUntil,
                 now + def.slowDuration
@@ -939,17 +1670,17 @@ const canvas = document.getElementById("gameCanvas");
 
       function findBlockingPlant(enemy) {
         let target = null;
-        let targetX = -Infinity;
+        let targetY = -Infinity;
         game.plants.forEach((plant) => {
-          if (plant.row !== enemy.row) return;
+          if (plant.col !== enemy.col) return;
           const center = cellCenter(plant.row, plant.col);
-          if (center.x < enemy.x && center.x > targetX) {
+          if (center.y < enemy.y && center.y > targetY) {
             target = plant;
-            targetX = center.x;
+            targetY = center.y;
           }
         });
         if (!target) return null;
-        if (enemy.x - targetX <= cellSize * 0.25) {
+        if (enemy.y - targetY <= cellSize * 0.25) {
           return target;
         }
         return null;
@@ -957,9 +1688,15 @@ const canvas = document.getElementById("gameCanvas");
 
       function updateEnemies(dt) {
         const now = performance.now() / 1000;
+        const player = game.player;
         game.enemies.forEach((enemy) => {
+          if (enemy.state === "dead") {
+            enemy.stateTime += dt;
+            return;
+          }
           const targetPlant = findBlockingPlant(enemy);
           if (targetPlant) {
+            enemy.moving = false;
             enemy.attackCooldown -= dt;
             if (enemy.attackCooldown <= 0) {
               targetPlant.hp -= enemy.damage;
@@ -976,27 +1713,37 @@ const canvas = document.getElementById("gameCanvas");
           if (now < enemy.slowUntil) {
             speed *= enemy.slowFactor;
           }
-          enemy.x -= speed * dt;
+          enemy.moving = true;
+          enemy.y -= speed * dt;
 
-          const dx = enemy.x - game.player.x;
-          const dy = enemy.y - game.player.y;
-          if (dx * dx + dy * dy < 220 && now > game.player.invulnUntil) {
+          const dx = enemy.x - player.x;
+          const dy = enemy.y - player.y;
+          if (dx * dx + dy * dy < 220 && now > player.invulnUntil) {
             const damage = Math.max(6, enemy.damage * 0.6);
-            game.player.hp -= damage;
-            game.player.invulnUntil = now + 1;
+            player.hp -= damage;
             log("Petani terkena serangan.");
-            if (game.player.hp <= 0) {
+            if (player.hp <= 0) {
               game.lives -= 1;
               game.lives = Math.max(0, game.lives);
-              game.player.hp = game.player.maxHp;
+              player.hp = player.maxHp;
+              const deathDuration =
+                spriteSheets.player.deathDown.frames / playerAnimRates.death;
+              startPlayerState("dead", deathDuration);
+              player.invulnUntil = now + deathDuration;
+              player.dodgeUntil = 0;
               log("Petani tumbang. Nyawa berkurang.");
+            } else {
+              const hitDuration = spriteSheets.player.hitDown.frames / playerAnimRates.hit;
+              startPlayerState("hit", hitDuration);
+              player.invulnUntil = now + 1;
             }
           }
 
-          if (enemy.x <= coreWidth + 8) {
+          if (enemy.y <= getCoreHitY() + coreHitHeight / 2) {
             game.core.hp -= enemy.damage;
             enemy.hp = 0;
             enemy.reachedCore = true;
+            startEnemyDeath(enemy);
             log("Inti desa diserang.");
           }
         });
@@ -1004,12 +1751,16 @@ const canvas = document.getElementById("gameCanvas");
 
       function cleanupEnemies() {
         game.enemies.forEach((enemy) => {
-          if (enemy.hp <= 0 && !enemy.counted && !enemy.reachedCore) {
+          if (enemy.state === "dead" && !enemy.counted && !enemy.reachedCore) {
             enemy.counted = true;
             game.kills += 1;
           }
         });
-        game.enemies = game.enemies.filter((enemy) => enemy.hp > 0);
+        game.enemies = game.enemies.filter((enemy) => {
+          if (enemy.state !== "dead") return true;
+          const duration = enemy.deathDuration || 0.6;
+          return enemy.stateTime < duration;
+        });
       }
 
       function updateProjectiles(dt) {
@@ -1017,12 +1768,15 @@ const canvas = document.getElementById("gameCanvas");
           if (shot.hit) return;
           shot.x += shot.vx * dt;
           shot.y += shot.vy * dt;
+          if (shot.spriteSrc) {
+            shot.rotation = Math.atan2(shot.vy, shot.vx);
+          }
           for (const enemy of game.enemies) {
-            if (enemy.hp <= 0) continue;
+            if (enemy.state === "dead") continue;
             const dx = enemy.x - shot.x;
             const dy = enemy.y - shot.y;
             if (dx * dx + dy * dy <= shot.radius * shot.radius * 9) {
-              enemy.hp -= shot.damage;
+              applyEnemyDamage(enemy, shot.damage);
               shot.hit = true;
               break;
             }
@@ -1050,35 +1804,52 @@ const canvas = document.getElementById("gameCanvas");
       function shootAt(targetX, targetY) {
         if (game.phase !== "pertahanan") return;
         if (game.player.cooldown > 0) return;
+        if (game.player.state === "dead") return;
         const weapon = weapons[game.player.weaponIndex];
+        if (!weapon) return;
         const dx = targetX - game.player.x;
         const dy = targetY - game.player.y;
-        const dist = Math.hypot(dx, dy) || 1;
-        const vx = (dx / dist) * weapon.speed;
-        const vy = (dy / dist) * weapon.speed;
-        const damage = weapon.damage * (1 + game.bonuses.playerDamage + game.skills.combat * 0.03);
-        game.projectiles.push({
-          x: game.player.x,
-          y: game.player.y,
-          vx,
-          vy,
-          damage,
-          radius: weapon.radius,
-          color: weapon.color,
-          hit: false,
-        });
+        const dist = Math.hypot(dx, dy);
+        let angle = dist > 0.001 ? Math.atan2(dy, dx) : getFacingAngle(game.player.facing);
+        faceTowards(dx, dy);
+        game.player.attackAngle = angle;
+        const attackType = weapon.attackType || "slice";
+        const attackDuration = getAttackDuration(attackType);
+        startPlayerState("attack", attackDuration, attackType);
+
+        if (weapon.type === "melee") {
+          performMeleeAttack(weapon, angle);
+        } else {
+          spawnProjectile(weapon, angle);
+        }
+
         game.player.cooldown = weapon.cooldown;
       }
 
       function updatePlayer(dt) {
-        if (game.phase !== "pertahanan") {
-          game.player.moving = false;
-          game.player.animTime += dt * 0.35;
+        const player = game.player;
+        if (player.state !== "normal") {
+          player.stateTime += dt;
+          if (player.stateTime >= player.stateDuration) {
+            player.state = "normal";
+            player.stateTime = 0;
+            player.stateDuration = 0;
+          }
+        }
+        const canMove = game.phase === "pertahanan" || game.phase === "persiapan";
+        if (!canMove) {
+          player.moving = false;
+          player.animTime += dt * 0.35;
           return;
         }
-        let speed = game.player.speed;
+        if (player.state === "dead") {
+          player.moving = false;
+          player.animTime += dt * 0.2;
+          return;
+        }
+        let speed = player.speed;
         const now = performance.now() / 1000;
-        if (now < game.player.dodgeUntil) {
+        if (now < player.dodgeUntil) {
           speed *= 1.8;
         }
 
@@ -1090,26 +1861,30 @@ const canvas = document.getElementById("gameCanvas");
         if (keys.d) vx += 1;
         if (vx || vy) {
           const len = Math.hypot(vx, vy) || 1;
-          game.player.x += (vx / len) * speed * dt;
-          game.player.y += (vy / len) * speed * dt;
+          player.x += (vx / len) * speed * dt;
+          player.y += (vy / len) * speed * dt;
         }
 
         const moving = Boolean(vx || vy);
         if (moving) {
           if (Math.abs(vx) > Math.abs(vy)) {
-            game.player.facing = vx < 0 ? "left" : "right";
+            player.facing = vx < 0 ? "left" : "right";
           } else {
-            game.player.facing = vy < 0 ? "up" : "down";
+            player.facing = vy < 0 ? "up" : "down";
           }
         }
-        game.player.moving = moving;
-        game.player.animTime += dt * (moving ? 1 : 0.4);
+        player.moving = moving;
+        player.animTime += dt * (moving ? 1 : 0.4);
 
-        game.player.x = clamp(game.player.x, 10, canvas.width - 10);
-        game.player.y = clamp(game.player.y, 10, canvas.height - 10);
+        const minX = boardOffsetX + 10;
+        const maxX = boardOffsetX + boardWidth - 10;
+        const minY = boardOffsetY + 10;
+        const maxY = boardOffsetY + boardHeight - 10;
+        player.x = clamp(player.x, minX, maxX);
+        player.y = clamp(player.y, minY, maxY);
 
-        if (game.player.cooldown > 0) {
-          game.player.cooldown -= dt;
+        if (player.cooldown > 0) {
+          player.cooldown -= dt;
         }
       }
 
@@ -1118,12 +1893,13 @@ const canvas = document.getElementById("gameCanvas");
 
         game.time += dt;
         updatePlayer(dt);
+        syncSelectionToPlayer();
 
         if (game.phase === "pertahanan") {
           game.waveTimer += dt;
           while (game.spawnQueue.length && game.spawnQueue[0].time <= game.waveTimer) {
             const spawn = game.spawnQueue.shift();
-            spawnEnemy(spawn.type, spawn.row);
+            spawnEnemy(spawn.type, spawn.col);
           }
           updatePlants(dt);
           updateEnemies(dt);
@@ -1141,15 +1917,17 @@ const canvas = document.getElementById("gameCanvas");
         }
       }
 
-      function spawnEnemy(type, row) {
+      function spawnEnemy(type, col) {
         const def = enemyDefs[type];
-        const center = cellCenter(row, cols - 1);
+        if (!def) return;
         const speed = Math.max(6, def.speed * (1 + game.weather.enemySpeed));
+        const x = gridStartX + col * cellSize + cellSize / 2;
+        const y = boardOffsetY + boardHeight + 24;
         game.enemies.push({
           type,
-          row,
-          x: gridEndX + 20,
-          y: center.y,
+          col,
+          x,
+          y,
           hp: def.hp,
           maxHp: def.hp,
           speed,
@@ -1162,6 +1940,10 @@ const canvas = document.getElementById("gameCanvas");
           reachedCore: false,
           counted: false,
           animOffset: Math.random() * 4,
+          moving: true,
+          state: "run",
+          stateTime: 0,
+          deathDuration: 0,
         });
       }
 
@@ -1238,7 +2020,7 @@ const canvas = document.getElementById("gameCanvas");
         for (let row = 0; row < rows; row += 1) {
           for (let col = 0; col < cols; col += 1) {
             const x = gridStartX + col * cellSize;
-            const y = row * cellSize;
+            const y = boardOffsetY + row * cellSize;
             ctx.fillStyle = (row + col) % 2 === 0 ? light : dark;
             ctx.fillRect(x, y, cellSize, cellSize);
           }
@@ -1246,61 +2028,54 @@ const canvas = document.getElementById("gameCanvas");
         ctx.strokeStyle = "rgba(255,255,255,0.12)";
         for (let row = 0; row <= rows; row += 1) {
           ctx.beginPath();
-          ctx.moveTo(gridStartX, row * cellSize);
-          ctx.lineTo(gridEndX, row * cellSize);
+          ctx.moveTo(gridStartX, boardOffsetY + row * cellSize);
+          ctx.lineTo(gridEndX, boardOffsetY + row * cellSize);
           ctx.stroke();
         }
         for (let col = 0; col <= cols; col += 1) {
           ctx.beginPath();
-          ctx.moveTo(gridStartX + col * cellSize, 0);
-          ctx.lineTo(gridStartX + col * cellSize, boardHeight);
+          ctx.moveTo(gridStartX + col * cellSize, boardOffsetY);
+          ctx.lineTo(gridStartX + col * cellSize, boardOffsetY + boardHeight);
           ctx.stroke();
         }
       }
 
       function drawCore() {
-        ctx.fillStyle = "#e3caa2";
-        ctx.fillRect(0, 0, coreWidth, boardHeight);
-
-        const houseWidth = coreWidth - 18;
-        const houseHeight = 60;
-        const houseX = 9;
-        const houseY = 44;
-
-        ctx.fillStyle = "#f1d1a1";
-        ctx.fillRect(houseX, houseY, houseWidth, houseHeight);
-        ctx.fillStyle = "#d89b57";
-        ctx.beginPath();
-        ctx.moveTo(houseX - 4, houseY);
-        ctx.lineTo(houseX + houseWidth / 2, houseY - 20);
-        ctx.lineTo(houseX + houseWidth + 4, houseY);
-        ctx.closePath();
-        ctx.fill();
-
-        ctx.fillStyle = "#9c6a3b";
-        ctx.fillRect(houseX + 6, houseY + 18, 12, 18);
-        ctx.fillStyle = "#7d4f2b";
-        ctx.fillRect(houseX + houseWidth - 18, houseY + 18, 12, 12);
-
-        ctx.fillStyle = "#7b4a24";
-        ctx.fillRect(houseX + houseWidth / 2 - 6, houseY + 26, 12, 22);
-        ctx.fillStyle = "#f5d28f";
-        ctx.fillRect(houseX + houseWidth / 2 - 2, houseY + 30, 4, 6);
-
-        ctx.fillStyle = "#c28c52";
-        for (let y = 6; y < boardHeight; y += 18) {
-          ctx.fillRect(coreWidth - 6, y, 4, 10);
-        }
-
-        const barWidth = coreWidth - 16;
+        const marker = getCoreMarkerPosition();
+        const barWidth = 92;
+        const barHeight = 8;
         const ratio = clamp(game.core.hp / game.core.maxHp, 0, 1);
-        ctx.fillStyle = "rgba(0, 0, 0, 0.15)";
-        ctx.fillRect(8, boardHeight - 18, barWidth, 8);
-        ctx.fillStyle = "#8ee26b";
-        ctx.fillRect(8, boardHeight - 18, barWidth * ratio, 8);
-        ctx.fillStyle = "#4b2b15";
-        ctx.font = "bold 11px Baloo 2";
-        ctx.fillText("INTI", 12, 20);
+
+        ctx.save();
+        ctx.strokeStyle = "rgba(255, 230, 160, 0.55)";
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.arc(marker.x, marker.y + 12, 20, 0, Math.PI * 2);
+        ctx.stroke();
+
+        ctx.fillStyle = "rgba(20, 16, 10, 0.6)";
+        ctx.fillRect(
+          Math.round(marker.x - barWidth / 2 - 3),
+          Math.round(marker.y + 22),
+          barWidth + 6,
+          barHeight + 6
+        );
+        drawPixelBar(
+          Math.round(marker.x - barWidth / 2),
+          Math.round(marker.y + 25),
+          barWidth,
+          barHeight,
+          ratio,
+          "#8ee26b",
+          "#2f3b2f",
+          "#131018"
+        );
+        ctx.fillStyle = "#fff1c9";
+        ctx.font = "bold 12px Baloo 2";
+        ctx.textAlign = "center";
+        ctx.textBaseline = "bottom";
+        ctx.fillText("INTI", marker.x, marker.y + 18);
+        ctx.restore();
       }
 
       function drawSpriteFrame(img, frameIndex, x, y, frameW, frameH, scale, flip) {
@@ -1586,81 +2361,137 @@ const canvas = document.getElementById("gameCanvas");
       function drawEnemyBody(enemy) {
         const x = enemy.x;
         const y = enemy.y;
-        if (enemy.type === "slime") {
-          ctx.fillStyle = enemy.color;
-          ctx.beginPath();
-          ctx.arc(x, y, 14, Math.PI, 0);
-          ctx.quadraticCurveTo(x + 14, y + 16, x, y + 18);
-          ctx.quadraticCurveTo(x - 14, y + 16, x - 14, y);
-          ctx.closePath();
-          ctx.fill();
-        } else if (enemy.type === "golem") {
-          ctx.fillStyle = enemy.color;
-          ctx.fillRect(x - 16, y - 16, 32, 32);
-          ctx.fillStyle = "rgba(255, 255, 255, 0.2)";
-          ctx.fillRect(x - 16, y - 16, 10, 10);
-          ctx.fillStyle = "rgba(0, 0, 0, 0.15)";
-          ctx.fillRect(x + 6, y + 6, 10, 10);
-        } else {
-          ctx.fillStyle = enemy.color;
-          ctx.beginPath();
-          ctx.arc(x, y - 4, 12, Math.PI, 0);
-          ctx.lineTo(x + 12, y + 12);
-          ctx.quadraticCurveTo(x + 6, y + 16, x, y + 12);
-          ctx.quadraticCurveTo(x - 6, y + 16, x - 12, y + 12);
-          ctx.closePath();
-          ctx.fill();
-        }
+        const radius = enemyBaseSize * 0.22;
+        ctx.fillStyle = enemy.color || "#6ce0c6";
+        ctx.beginPath();
+        ctx.arc(x, y, radius, 0, Math.PI * 2);
+        ctx.fill();
 
         ctx.fillStyle = "#1f1f1f";
         ctx.beginPath();
-        ctx.arc(x - 5, y - 2, 2.5, 0, Math.PI * 2);
-        ctx.arc(x + 5, y - 2, 2.5, 0, Math.PI * 2);
+        ctx.arc(x - radius * 0.35, y - radius * 0.15, 2.5, 0, Math.PI * 2);
+        ctx.arc(x + radius * 0.35, y - radius * 0.15, 2.5, 0, Math.PI * 2);
         ctx.fill();
       }
 
       function drawEnemies() {
         game.enemies.forEach((enemy) => {
-          const spriteSet = spriteSheets.enemies[enemy.type];
-          const frameW = spriteSheets.enemies.frameW;
-          const frameH = spriteSheets.enemies.frameH;
-          const img = spriteSet ? getSpriteImage(spriteSet.src) : null;
-          const frames = spriteSet ? spriteSet.frames : 0;
+          const sprite = getEnemySprite(enemy.type);
+          const isDead = enemy.state === "dead";
+          const moving = enemy.moving;
+          const sheet = sprite
+            ? isDead
+              ? sprite.death
+              : moving
+                ? sprite.run
+                : sprite.idle
+            : null;
+          const img = sheet ? getSpriteImage(sheet.src) : null;
+          const frames = sheet ? sheet.frames : 0;
+          const fps = isDead
+            ? enemyAnimRates.death
+            : moving
+              ? enemyAnimRates.run
+              : enemyAnimRates.idle;
           const frameIndex = frames
-            ? Math.floor((game.time * 8 + enemy.animOffset) % frames)
+            ? (() => {
+                const raw = Math.floor(
+                  (isDead ? enemy.stateTime : game.time + enemy.animOffset) * fps
+                );
+                return isDead ? Math.min(frames - 1, raw) : raw % frames;
+              })()
             : 0;
+          const frameW = sheet ? sheet.frameW : 32;
+          const frameH = sheet ? sheet.frameH : 32;
+          const scale = sheet ? enemyBaseSize / frameH : 1.05;
 
           ctx.fillStyle = "rgba(0, 0, 0, 0.22)";
           ctx.beginPath();
-          ctx.ellipse(enemy.x, enemy.y + 16, 14, 6, 0, 0, Math.PI * 2);
+          ctx.ellipse(
+            enemy.x,
+            enemy.y + enemyBaseSize * 0.3,
+            enemyBaseSize * 0.45,
+            enemyBaseSize * 0.18,
+            0,
+            0,
+            Math.PI * 2
+          );
           ctx.fill();
 
-          if (!drawSpriteFrame(img, frameIndex, enemy.x, enemy.y, frameW, frameH, 1.05, true)) {
+          if (!drawSpriteFrame(img, frameIndex, enemy.x, enemy.y, frameW, frameH, scale, false)) {
             drawEnemyBody(enemy);
           }
-          const ratio = clamp(enemy.hp / enemy.maxHp, 0, 1);
-          ctx.fillStyle = "rgba(0,0,0,0.25)";
-          ctx.fillRect(enemy.x - 16, enemy.y - 22, 32, 4);
-          ctx.fillStyle = "#ffbe0b";
-          ctx.fillRect(enemy.x - 16, enemy.y - 22, 32 * ratio, 4);
+          if (enemy.state !== "dead") {
+            const ratio = clamp(enemy.hp / enemy.maxHp, 0, 1);
+            const barWidth = enemyBaseSize * 0.5;
+            const barX = enemy.x - barWidth / 2;
+            const barY = enemy.y - enemyBaseSize * 0.45;
+            ctx.fillStyle = "rgba(0,0,0,0.25)";
+            ctx.fillRect(barX, barY, barWidth, 4);
+            ctx.fillStyle = "#ffbe0b";
+            ctx.fillRect(barX, barY, barWidth * ratio, 4);
+          }
         });
       }
 
       function drawPlayer() {
         const now = performance.now() / 1000;
-        const invuln = now < game.player.invulnUntil;
-        const dodge = now < game.player.dodgeUntil;
+        const player = game.player;
+        const invuln = now < player.invulnUntil;
+        const dodge = now < player.dodgeUntil;
         const sprites = spriteSheets.player;
         const frameW = sprites.frameW;
         const frameH = sprites.frameH;
 
-        const facing = game.player.facing;
-        const moving = game.player.moving;
+        const facing = player.facing;
+        const moving = player.moving;
         let sheet = sprites.idleDown;
         let frames = sheet.frames;
         let flip = false;
+        let fps = playerAnimRates.idle;
+        let useStateTime = false;
 
-        if (moving) {
+        if (player.state === "dead") {
+          if (facing === "up") {
+            sheet = sprites.deathUp;
+          } else if (facing === "down") {
+            sheet = sprites.deathDown;
+          } else {
+            sheet = sprites.deathSide;
+            flip = facing === "left";
+          }
+          frames = sheet.frames;
+          fps = playerAnimRates.death;
+          useStateTime = true;
+        } else if (player.state === "hit") {
+          if (facing === "up") {
+            sheet = sprites.hitUp;
+          } else if (facing === "down") {
+            sheet = sprites.hitDown;
+          } else {
+            sheet = sprites.hitSide;
+            flip = facing === "left";
+          }
+          frames = sheet.frames;
+          fps = playerAnimRates.hit;
+          useStateTime = true;
+        } else if (player.state === "attack") {
+          const attackSet =
+            player.attackType === "pierce"
+              ? { down: sprites.pierceDown, up: sprites.pierceUp, side: sprites.pierceSide }
+              : { down: sprites.sliceDown, up: sprites.sliceUp, side: sprites.sliceSide };
+          if (facing === "up") {
+            sheet = attackSet.up;
+          } else if (facing === "down") {
+            sheet = attackSet.down;
+          } else {
+            sheet = attackSet.side;
+            flip = facing === "left";
+          }
+          frames = sheet.frames;
+          fps = playerAnimRates.attack;
+          useStateTime = true;
+        } else if (moving) {
           if (facing === "up") {
             sheet = sprites.runUp;
           } else if (facing === "down") {
@@ -1670,6 +2501,7 @@ const canvas = document.getElementById("gameCanvas");
             flip = facing === "left";
           }
           frames = sheet.frames;
+          fps = playerAnimRates.run;
         } else {
           if (facing === "up") {
             sheet = sprites.idleUp;
@@ -1680,42 +2512,82 @@ const canvas = document.getElementById("gameCanvas");
             flip = facing === "left";
           }
           frames = sheet.frames;
+          fps = playerAnimRates.idle;
         }
 
         const img = getSpriteImage(sheet.src);
-        const fps = moving ? 10 : 6;
-        const frameIndex = Math.floor(game.player.animTime * fps) % frames;
+        const frameIndex = useStateTime
+          ? Math.min(frames - 1, Math.floor(player.stateTime * fps))
+          : Math.floor(player.animTime * fps) % frames;
 
         ctx.fillStyle = "rgba(0, 0, 0, 0.25)";
         ctx.beginPath();
-        ctx.ellipse(game.player.x, game.player.y + 18, 14, 6, 0, 0, Math.PI * 2);
+        ctx.ellipse(player.x, player.y + 18, 14, 6, 0, 0, Math.PI * 2);
         ctx.fill();
 
-        if (!drawSpriteFrame(img, frameIndex, game.player.x, game.player.y, frameW, frameH, 1.1, flip)) {
+        if (!drawSpriteFrame(img, frameIndex, player.x, player.y, frameW, frameH, 1.1, flip)) {
           ctx.fillStyle = invuln ? "#f77f00" : "#f4d35e";
           ctx.beginPath();
-          ctx.arc(game.player.x, game.player.y, 10, 0, Math.PI * 2);
+          ctx.arc(player.x, player.y, 10, 0, Math.PI * 2);
           ctx.fill();
         }
 
-        if (dodge) {
-          ctx.strokeStyle = "rgba(255, 255, 255, 0.6)";
-          ctx.lineWidth = 2;
-          ctx.beginPath();
-          ctx.arc(game.player.x, game.player.y + 6, 18, 0, Math.PI * 2);
-          ctx.stroke();
-        } else if (invuln) {
-          ctx.strokeStyle = "rgba(255, 210, 120, 0.6)";
-          ctx.lineWidth = 2;
-          ctx.beginPath();
-          ctx.arc(game.player.x, game.player.y + 6, 16, 0, Math.PI * 2);
-          ctx.stroke();
+        const armor = armorOptions[player.armorIndex];
+        if (armor && armor.src) {
+          const armorImg = getSpriteImage(armor.src);
+          if (armorImg) {
+            const armorSize = Math.round(frameW * 0.3);
+            const armorOffsetY = 10;
+            ctx.save();
+            ctx.translate(Math.round(player.x), Math.round(player.y));
+            if (flip) {
+              ctx.scale(-1, 1);
+            }
+            ctx.drawImage(
+              armorImg,
+              -armorSize / 2,
+              -armorSize / 2 + armorOffsetY,
+              armorSize,
+              armorSize
+            );
+            ctx.restore();
+          }
+        }
+
+        drawHeldWeapon(player);
+
+        if (player.state !== "dead") {
+          if (dodge) {
+            ctx.strokeStyle = "rgba(255, 255, 255, 0.6)";
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.arc(player.x, player.y + 6, 18, 0, Math.PI * 2);
+            ctx.stroke();
+          } else if (invuln) {
+            ctx.strokeStyle = "rgba(255, 210, 120, 0.6)";
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.arc(player.x, player.y + 6, 16, 0, Math.PI * 2);
+            ctx.stroke();
+          }
         }
       }
 
       function drawProjectiles() {
         game.projectiles.forEach((shot) => {
-          ctx.fillStyle = shot.color;
+          if (shot.spriteSrc) {
+            const img = getSpriteImage(shot.spriteSrc);
+            if (img) {
+              const size = shot.size || 18;
+              ctx.save();
+              ctx.translate(Math.round(shot.x), Math.round(shot.y));
+              ctx.rotate(shot.rotation || 0);
+              ctx.drawImage(img, -size / 2, -size / 2, size, size);
+              ctx.restore();
+              return;
+            }
+          }
+          ctx.fillStyle = shot.color || "#f4d35e";
           ctx.beginPath();
           ctx.arc(shot.x, shot.y, shot.radius, 0, Math.PI * 2);
           ctx.fill();
@@ -1728,6 +2600,26 @@ const canvas = document.getElementById("gameCanvas");
 
       function drawEffects() {
         game.effects.forEach((effect) => {
+          if (effect.type === "slash") {
+            const life = effect.life || 0.2;
+            const alpha = clamp(effect.ttl / life, 0, 1);
+            ctx.save();
+            ctx.strokeStyle = effect.color || "#d6f3ff";
+            ctx.globalAlpha = alpha;
+            ctx.lineWidth = effect.width || 12;
+            ctx.lineCap = "round";
+            ctx.beginPath();
+            ctx.arc(
+              effect.x,
+              effect.y,
+              effect.radius,
+              effect.angle - effect.arc / 2,
+              effect.angle + effect.arc / 2
+            );
+            ctx.stroke();
+            ctx.restore();
+            return;
+          }
           ctx.strokeStyle = effect.color;
           ctx.globalAlpha = clamp(effect.ttl / 0.15, 0, 1);
           ctx.lineWidth = 2;
@@ -1745,7 +2637,7 @@ const canvas = document.getElementById("gameCanvas");
         const cell = hoverCell || selectedCell;
         if (!cell) return;
         const x = gridStartX + cell.col * cellSize;
-        const y = cell.row * cellSize;
+        const y = boardOffsetY + cell.row * cellSize;
         ctx.strokeStyle = "rgba(255,255,255,0.8)";
         ctx.lineWidth = 2;
         ctx.strokeRect(x + 3, y + 3, cellSize - 6, cellSize - 6);
@@ -1784,6 +2676,7 @@ const canvas = document.getElementById("gameCanvas");
       }
 
       function resetGame() {
+        updateBoardLayout();
         game.time = 0;
         game.mapIndex = 0;
         game.waveInMap = 1;
@@ -1810,6 +2703,7 @@ const canvas = document.getElementById("gameCanvas");
         game.relics = [];
         game.weather = { name: "Normal", desc: "", coinsBonus: 0, enemySpeed: 0, healBonus: 0 };
         game.mapData = null;
+        game.armorOwned = { none: true };
         game.plants = [];
         game.enemies = [];
         game.projectiles = [];
@@ -1821,7 +2715,7 @@ const canvas = document.getElementById("gameCanvas");
         game.paused = false;
         game.player = {
           x: gridStartX + 20,
-          y: boardHeight / 2,
+          y: boardOffsetY + boardHeight / 2,
           speed: 140,
           weaponIndex: 0,
           cooldown: 0,
@@ -1831,9 +2725,16 @@ const canvas = document.getElementById("gameCanvas");
           facing: "down",
           moving: false,
           animTime: 0,
+          state: "normal",
+          stateTime: 0,
+          stateDuration: 0,
+          attackType: "slice",
+          attackAngle: 0,
+          armorIndex: 0,
           hp: 100,
           maxHp: 100,
         };
+        selectedArmorIndex = 0;
         selectedPlant = "mage";
         selectedCell = { row: 2, col: 2 };
         hoverCell = null;
@@ -1892,11 +2793,37 @@ const canvas = document.getElementById("gameCanvas");
       }
 
       ui.startDefense.addEventListener("click", startDefense);
+      if (ui.startDefenseAlt) {
+        ui.startDefenseAlt.addEventListener("click", () => {
+          if (!hasStarted) {
+            startGame();
+          }
+          startDefense();
+        });
+      }
       ui.toUpgrade.addEventListener("click", openUpgradePhase);
       ui.nextDay.addEventListener("click", nextDay);
       ui.resetGame.addEventListener("click", resetGame);
       if (startButton) {
         startButton.addEventListener("click", startGame);
+      }
+      if (ui.mapSelect) {
+        ui.mapSelect.addEventListener("change", () => {
+          const nextIndex = Number.parseInt(ui.mapSelect.value, 10);
+          if (Number.isNaN(nextIndex)) return;
+          if (!setMapIndex(nextIndex)) {
+            ui.mapSelect.value = String(game.mapIndex);
+          }
+        });
+      }
+      if (ui.levelSelect) {
+        ui.levelSelect.addEventListener("change", () => {
+          const nextLevel = Number.parseInt(ui.levelSelect.value, 10);
+          if (Number.isNaN(nextLevel)) return;
+          if (!setLevel(nextLevel)) {
+            ui.levelSelect.value = String(game.level);
+          }
+        });
       }
       ui.toggleHarvest.addEventListener("click", () => {
         harvestMode = !harvestMode;
@@ -1909,6 +2836,27 @@ const canvas = document.getElementById("gameCanvas");
       ui.upgradePlants.addEventListener("click", upgradePlants);
       ui.upgradePlayer.addEventListener("click", upgradePlayer);
       ui.upgradeFarm.addEventListener("click", upgradeFarm);
+      if (ui.armorPrev) {
+        ui.armorPrev.addEventListener("click", () => {
+          setArmorIndex(selectedArmorIndex - 1);
+        });
+      }
+      if (ui.armorNext) {
+        ui.armorNext.addEventListener("click", () => {
+          setArmorIndex(selectedArmorIndex + 1);
+        });
+      }
+      if (ui.armorAction) {
+        ui.armorAction.addEventListener("click", () => {
+          const armor = armorOptions[selectedArmorIndex];
+          if (!armor) return;
+          if (game.armorOwned[armor.id]) {
+            equipArmor(selectedArmorIndex);
+          } else {
+            buyArmor(selectedArmorIndex);
+          }
+        });
+      }
 
       function handleCanvasClick(event) {
         const rect = canvas.getBoundingClientRect();
@@ -1959,6 +2907,23 @@ const canvas = document.getElementById("gameCanvas");
         { passive: false }
       );
 
+      function getMoveKey(event) {
+        if (event.code === "KeyW" || event.code === "ArrowUp") return "w";
+        if (event.code === "KeyS" || event.code === "ArrowDown") return "s";
+        if (event.code === "KeyA" || event.code === "ArrowLeft") return "a";
+        if (event.code === "KeyD" || event.code === "ArrowRight") return "d";
+        const key = event.key.toLowerCase();
+        if (key === "w" || key === "a" || key === "s" || key === "d") return key;
+        return null;
+      }
+
+      function applySelectionMove(moveKey) {
+        if (moveKey === "w") selectedCell.row = clamp(selectedCell.row - 1, 0, rows - 1);
+        if (moveKey === "s") selectedCell.row = clamp(selectedCell.row + 1, 0, rows - 1);
+        if (moveKey === "a") selectedCell.col = clamp(selectedCell.col - 1, 0, cols - 1);
+        if (moveKey === "d") selectedCell.col = clamp(selectedCell.col + 1, 0, cols - 1);
+      }
+
       window.addEventListener("keydown", (event) => {
         const key = event.key.toLowerCase();
         if (!hasStarted) {
@@ -1982,6 +2947,11 @@ const canvas = document.getElementById("gameCanvas");
           return;
         }
         if (game.paused) return;
+        if (key === "enter" && game.phase === "persiapan") {
+          startDefense();
+          event.preventDefault();
+          return;
+        }
         if (key === "f") {
           if (game.phase === "persiapan") {
             placePlant(selectedCell.row, selectedCell.col);
@@ -1994,22 +2964,33 @@ const canvas = document.getElementById("gameCanvas");
             game.player.dodgeUntil = now + 0.4;
             game.player.dodgeCooldownUntil = now + 1.6;
           }
+          event.preventDefault();
           return;
         }
 
-        keys[key] = true;
-
-        if (game.phase !== "pertahanan") {
-          if (key === "w") selectedCell.row = clamp(selectedCell.row - 1, 0, rows - 1);
-          if (key === "s") selectedCell.row = clamp(selectedCell.row + 1, 0, rows - 1);
-          if (key === "a") selectedCell.col = clamp(selectedCell.col - 1, 0, cols - 1);
-          if (key === "d") selectedCell.col = clamp(selectedCell.col + 1, 0, cols - 1);
+        const moveKey = getMoveKey(event);
+        if (moveKey) {
+          keys[moveKey] = true;
+          if (game.phase !== "pertahanan") {
+            applySelectionMove(moveKey);
+          }
+          event.preventDefault();
         }
       });
 
       window.addEventListener("keyup", (event) => {
-        const key = event.key.toLowerCase();
-        keys[key] = false;
+        const moveKey = getMoveKey(event);
+        if (moveKey) {
+          keys[moveKey] = false;
+          event.preventDefault();
+        }
+      });
+
+      window.addEventListener("blur", () => {
+        keys.w = false;
+        keys.a = false;
+        keys.s = false;
+        keys.d = false;
       });
 
       let lastTime = performance.now();
@@ -2023,5 +3004,6 @@ const canvas = document.getElementById("gameCanvas");
       }
 
       loadSprites();
+      setupSettingsControls();
       resetGame();
       requestAnimationFrame(loop);

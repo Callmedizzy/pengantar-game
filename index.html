@@ -43,13 +43,71 @@
         <section class="board-card">
           <div class="canvas-wrap">
             <div class="scene-tag" id="sceneTag">Hidup & Persiapan</div>
-            <canvas id="gameCanvas" width="710" height="350"></canvas>
+            <canvas id="gameCanvas" width="710" height="710"></canvas>
           </div>
           <div class="board-footer">
             <div id="statusText">Fase: Persiapan</div>
             <div id="weaponText">Senjata: Sabit</div>
           </div>
         </section>
+
+        <aside class="guide-panel">
+          <div class="panel-section">
+            <h2>Cara Bermain</h2>
+            <div class="guide-list">
+              <div>1. Pilih benih lalu tanam di petak saat persiapan.</div>
+              <div>2. Tekan Enter untuk mulai pertahanan.</div>
+              <div>3. Serang musuh dan lindungi inti desa.</div>
+              <div>4. Setelah gelombang, eksplor dan tingkatkan desa.</div>
+            </div>
+          </div>
+          <div class="panel-section">
+            <h2>Mulai & Peta</h2>
+            <div class="option-grid">
+              <div class="option-row">
+                <label for="levelSelect">Level Awal</label>
+                <select id="levelSelect"></select>
+              </div>
+              <div class="option-row">
+                <label for="mapSelect">Pilih Peta</label>
+                <select id="mapSelect"></select>
+              </div>
+            </div>
+            <div class="button-row" style="margin-top: 10px">
+              <button id="startDefenseAlt" type="button">Mulai Pertahanan</button>
+            </div>
+          </div>
+          <div class="panel-section">
+            <h2>Kontrol</h2>
+            <div class="control-list">
+              <div>WASD / Panah: Gerak petani (kursor tanam mengikuti posisi)</div>
+              <div>F: Tanam / panen di kursor</div>
+              <div>Klik kiri: Serang musuh</div>
+              <div>Roda mouse: Ganti senjata</div>
+              <div>Spasi: Menghindar singkat</div>
+              <div>Enter: Mulai pertahanan</div>
+              <div>E: Menu karakter</div>
+              <div>ESC: Jeda</div>
+            </div>
+          </div>
+          <div class="panel-section">
+            <h2>Toko Armor</h2>
+            <div class="armor-picker">
+              <div class="armor-preview">
+                <img id="armorPreview" alt="Preview armor" />
+              </div>
+              <div>
+                <div id="armorName" class="armor-name">Armor</div>
+                <div id="armorPrice" class="armor-price">Harga: -</div>
+              </div>
+            </div>
+            <div class="button-row">
+              <button id="armorPrev" type="button" class="secondary">Sebelumnya</button>
+              <button id="armorNext" type="button">Berikutnya</button>
+              <button id="armorAction" type="button" class="secondary">Beli</button>
+            </div>
+          </div>
+        </aside>
 
         <aside class="panel">
           <div class="panel-section">
@@ -118,8 +176,8 @@
           <div class="panel-section">
             <h2>Kontrol</h2>
             <div class="control-list">
-              <div>WASD: Gerak petani saat pertahanan</div>
-              <div>WASD: Geser kursor tanam saat persiapan</div>
+              <div>WASD / Panah: Gerak petani (kursor tanam mengikuti posisi)</div>
+              <div>Enter: Mulai pertahanan saat persiapan</div>
               <div>F: Tanam atau panen di kursor</div>
               <div>Klik kiri mouse: Serang musuh</div>
               <div>Roda mouse: Ganti senjata</div>
