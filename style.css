@@ -207,6 +207,198 @@
         box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7);
       }
 
+      .seed-bar {
+        width: 100%;
+        --slot-size: clamp(40px, 7vmin, 54px);
+        padding: 10px 12px 12px;
+        border-radius: 12px;
+        background: linear-gradient(180deg, #f6c37d 0%, #e09a52 100%);
+        border: 3px solid #6d3b17;
+        box-shadow: inset 0 2px 0 rgba(255, 255, 255, 0.5),
+          0 10px 20px rgba(84, 48, 24, 0.25);
+        display: grid;
+        gap: 10px;
+        position: relative;
+      }
+
+      .seed-bar-title {
+        font-family: "Changa One", "Trebuchet MS", sans-serif;
+        letter-spacing: 1px;
+        color: #4f2f14;
+        font-size: 0.9rem;
+        text-transform: uppercase;
+      }
+
+      .seed-grid {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px;
+        border-radius: 10px;
+        background: linear-gradient(180deg, #f4b66c 0%, #e69c52 100%);
+        border: 2px solid rgba(123, 74, 36, 0.55);
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.4);
+        overflow-x: auto;
+      }
+
+      .seed-slot {
+        border: 2px solid rgba(110, 68, 36, 0.6);
+        border-radius: 6px;
+        padding: 6px;
+        background: linear-gradient(180deg, #ffe2b2 0%, #f0b064 100%);
+        box-shadow: inset 0 2px 0 rgba(255, 255, 255, 0.55),
+          inset 0 -2px 0 rgba(155, 92, 44, 0.35);
+        display: grid;
+        place-items: center;
+        position: relative;
+        width: var(--slot-size);
+        height: var(--slot-size);
+        cursor: pointer;
+      }
+
+      .seed-slot::before {
+        content: "";
+        position: absolute;
+        inset: 3px;
+        border-radius: 4px;
+        border: 1px solid rgba(255, 255, 255, 0.45);
+        pointer-events: none;
+      }
+
+      .seed-slot img {
+        width: calc(var(--slot-size) * 0.5);
+        height: calc(var(--slot-size) * 0.5);
+        image-rendering: pixelated;
+      }
+
+      .seed-count {
+        position: absolute;
+        right: 4px;
+        bottom: 4px;
+        font-size: 0.7rem;
+        color: #fff7e1;
+        padding: 2px 5px;
+        border-radius: 6px;
+        background: rgba(34, 22, 12, 0.75);
+        border: 1px solid rgba(255, 255, 255, 0.4);
+      }
+
+      .seed-slot.active {
+        border-color: #2d78ff;
+        box-shadow: 0 6px 14px rgba(45, 120, 255, 0.2),
+          inset 0 2px 0 rgba(255, 255, 255, 0.6);
+      }
+
+      .seed-slot:disabled {
+        cursor: default;
+      }
+
+      .seed-slot.empty {
+        opacity: 0.55;
+      }
+
+      .coin-icon {
+        width: calc(var(--slot-size) * 0.5);
+        height: calc(var(--slot-size) * 0.5);
+        border-radius: 50%;
+        background: radial-gradient(circle at 30% 30%, #fff2b8 0%, #f5c760 45%, #d9942f 100%);
+        border: 2px solid #7a4b1a;
+        box-shadow: inset 0 2px 0 rgba(255, 255, 255, 0.55);
+        position: relative;
+      }
+
+      .coin-icon::after {
+        content: "";
+        position: absolute;
+        inset: 7px;
+        border-radius: 50%;
+        border: 2px solid rgba(122, 75, 26, 0.4);
+      }
+
+      .bag-icon {
+        width: calc(var(--slot-size) * 0.5);
+        height: calc(var(--slot-size) * 0.45);
+        background: linear-gradient(180deg, #d59b5e 0%, #a86631 100%);
+        border: 2px solid #5b3416;
+        border-radius: 4px 4px 6px 6px;
+        position: relative;
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.4);
+      }
+
+      .bag-icon::before {
+        content: "";
+        position: absolute;
+        top: -7px;
+        left: 4px;
+        right: 4px;
+        height: 8px;
+        border: 2px solid #5b3416;
+        border-bottom: none;
+        border-radius: 8px 8px 0 0;
+        background: linear-gradient(180deg, #e5b178 0%, #c68349 100%);
+      }
+
+      .bag-icon::after {
+        content: "";
+        position: absolute;
+        top: -1px;
+        left: 5px;
+        right: 5px;
+        height: 4px;
+        background: rgba(91, 52, 22, 0.55);
+        border-radius: 0 0 4px 4px;
+      }
+
+      .coin-menu {
+        position: absolute;
+        right: 12px;
+        bottom: calc(100% + 10px);
+        width: min(280px, 88vw);
+        padding: 10px;
+        border-radius: 10px;
+        background: linear-gradient(180deg, #ffe6bf 0%, #f2b76f 100%);
+        border: 2px solid #7b4a24;
+        box-shadow: 0 14px 22px rgba(74, 43, 20, 0.3),
+          inset 0 2px 0 rgba(255, 255, 255, 0.5);
+        display: none;
+        gap: 8px;
+        z-index: 5;
+      }
+
+      .coin-menu.show {
+        display: grid;
+      }
+
+      .coin-item {
+        display: grid;
+        grid-template-columns: 28px 1fr;
+        gap: 10px;
+        align-items: center;
+        padding: 6px 8px;
+        border-radius: 8px;
+        background: linear-gradient(180deg, #fff1d4 0%, #f0b56f 100%);
+        border: 1px solid rgba(123, 74, 36, 0.45);
+        text-align: left;
+        font-family: inherit;
+        color: #4f2f14;
+      }
+
+      .coin-item img {
+        width: 24px;
+        height: 24px;
+        image-rendering: pixelated;
+      }
+
+      .coin-name {
+        font-weight: 700;
+        font-size: 0.9rem;
+      }
+
+      .coin-asset {
+        font-size: 0.72rem;
+        color: rgba(79, 47, 20, 0.7);
+      }
+
       aside.panel {
         padding: 20px;
         border-radius: 24px;
@@ -541,6 +733,10 @@
         box-shadow: none;
         width: min(90vmin, 760px);
         height: min(90vmin, 760px);
+      }
+
+      body.game-only .seed-bar {
+        width: min(90vmin, 760px);
       }
 
       body.game-only .guide-panel {

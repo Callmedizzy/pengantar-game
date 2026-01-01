@@ -45,6 +45,43 @@
             <div class="scene-tag" id="sceneTag">Hidup & Persiapan</div>
             <canvas id="gameCanvas" width="710" height="710"></canvas>
           </div>
+          <div class="seed-bar" id="seedBar">
+            <div class="seed-bar-title" id="seedBarTitle">Koleksi Benih</div>
+            <div class="seed-grid">
+              <button class="seed-slot" type="button" data-seed="mage">
+                <img src="assets/benih/gem02blue.png" alt="Benih Penyihir" />
+                <span class="seed-count" data-seed-count="mage">0</span>
+              </button>
+              <button class="seed-slot" type="button" data-seed="slow">
+                <img src="assets/benih/gem06green.png" alt="Benih Pelambat" />
+                <span class="seed-count" data-seed-count="slow">0</span>
+              </button>
+              <button class="seed-slot" type="button" data-seed="heal">
+                <img src="assets/benih/gem05red.png" alt="Benih Penyembuh" />
+                <span class="seed-count" data-seed-count="heal">0</span>
+              </button>
+              <button class="seed-slot" type="button" data-seed="buff">
+                <img src="assets/benih/gem03yellow.png" alt="Benih Penguat" />
+                <span class="seed-count" data-seed-count="buff">0</span>
+              </button>
+              <button class="seed-slot empty" type="button" disabled></button>
+              <button class="seed-slot empty" type="button" disabled></button>
+              <button class="seed-slot empty" type="button" disabled></button>
+              <button
+                class="seed-slot coin-slot"
+                id="coinSlot"
+                type="button"
+                aria-haspopup="true"
+                aria-expanded="false"
+              >
+                <span class="coin-icon" aria-hidden="true"></span>
+              </button>
+              <button class="seed-slot bag-slot" type="button" disabled>
+                <span class="bag-icon" aria-hidden="true"></span>
+              </button>
+            </div>
+            <div class="coin-menu" id="coinMenu" role="menu" aria-label="Daftar koin"></div>
+          </div>
           <div class="board-footer">
             <div id="statusText">Fase: Persiapan</div>
             <div id="weaponText">Senjata: Sabit</div>
@@ -105,6 +142,23 @@
               <button id="armorPrev" type="button" class="secondary">Sebelumnya</button>
               <button id="armorNext" type="button">Berikutnya</button>
               <button id="armorAction" type="button" class="secondary">Beli</button>
+            </div>
+          </div>
+          <div class="panel-section">
+            <h2>Toko Senjata</h2>
+            <div class="armor-picker">
+              <div class="armor-preview">
+                <img id="weaponPreview" alt="Preview senjata" />
+              </div>
+              <div>
+                <div id="weaponName" class="armor-name">Senjata</div>
+                <div id="weaponPrice" class="armor-price">Harga: -</div>
+              </div>
+            </div>
+            <div class="button-row">
+              <button id="weaponPrev" type="button" class="secondary">Sebelumnya</button>
+              <button id="weaponNext" type="button">Berikutnya</button>
+              <button id="weaponAction" type="button" class="secondary">Beli</button>
             </div>
           </div>
         </aside>

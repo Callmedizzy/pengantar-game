@@ -46,10 +46,21 @@ const canvas = document.getElementById("gameCanvas");
         armorNext: document.getElementById("armorNext"),
         armorPrice: document.getElementById("armorPrice"),
         armorAction: document.getElementById("armorAction"),
+        weaponName: document.getElementById("weaponName"),
+        weaponPreview: document.getElementById("weaponPreview"),
+        weaponPrev: document.getElementById("weaponPrev"),
+        weaponNext: document.getElementById("weaponNext"),
+        weaponPrice: document.getElementById("weaponPrice"),
+        weaponAction: document.getElementById("weaponAction"),
         mapSelect: document.getElementById("mapSelect"),
         levelSelect: document.getElementById("levelSelect"),
         startDefenseAlt: document.getElementById("startDefenseAlt"),
+        seedBarTitle: document.getElementById("seedBarTitle"),
+        coinSlot: document.getElementById("coinSlot"),
+        coinMenu: document.getElementById("coinMenu"),
       };
+
+      const seedSlots = Array.from(document.querySelectorAll(".seed-slot"));
 
       const startScreen = document.getElementById("startScreen");
       const startButton = document.getElementById("startButton");
@@ -143,6 +154,13 @@ const canvas = document.getElementById("gameCanvas");
         },
       };
 
+      const seedIcons = {
+        mage: "assets/benih/gem02blue.png",
+        slow: "assets/benih/gem06green.png",
+        heal: "assets/benih/gem05red.png",
+        buff: "assets/benih/gem03yellow.png",
+      };
+
       const enemyDefs = {
         orc: { name: "Orc", hp: 42, speed: 26, damage: 14, color: "#6ce0c6" },
         orcRogue: { name: "Orc Rogue", hp: 36, speed: 30, damage: 12, color: "#6aa9e6" },
@@ -164,6 +182,7 @@ const canvas = document.getElementById("gameCanvas");
           range: 58,
           arc: 1.4,
           icon: "assets/senjata/pedang.png",
+          price: 0,
           holdScale: 0.7,
           holdDistance: 16,
           holdOffsetY: 6,
@@ -180,6 +199,7 @@ const canvas = document.getElementById("gameCanvas");
           range: 70,
           arc: 1.2,
           icon: "assets/senjata/pedang panjang.png",
+          price: 18,
           holdScale: 0.76,
           holdDistance: 18,
           holdOffsetY: 4,
@@ -196,6 +216,7 @@ const canvas = document.getElementById("gameCanvas");
           range: 54,
           arc: 1.2,
           icon: "assets/senjata/kapak.png",
+          price: 16,
           holdScale: 0.74,
           holdDistance: 14,
           holdOffsetY: 8,
@@ -212,6 +233,7 @@ const canvas = document.getElementById("gameCanvas");
           range: 42,
           arc: 1.6,
           icon: "assets/senjata/pisau.png",
+          price: 8,
           holdScale: 0.6,
           holdDistance: 12,
           holdOffsetY: 6,
@@ -228,6 +250,7 @@ const canvas = document.getElementById("gameCanvas");
           range: 88,
           arc: 0.9,
           icon: "assets/senjata/pecut.png",
+          price: 12,
           holdScale: 0.75,
           holdDistance: 18,
           holdOffsetY: 2,
@@ -243,6 +266,7 @@ const canvas = document.getElementById("gameCanvas");
           cooldown: 0.85,
           speed: 560,
           icon: "assets/senjata/tombak.png",
+          price: 14,
           holdScale: 0.8,
           holdDistance: 18,
           holdOffsetY: 6,
@@ -259,6 +283,7 @@ const canvas = document.getElementById("gameCanvas");
           cooldown: 0.55,
           speed: 640,
           icon: "assets/senjata/panah.png",
+          price: 10,
           holdScale: 0.65,
           holdDistance: 14,
           holdOffsetY: 4,
@@ -315,6 +340,83 @@ const canvas = document.getElementById("gameCanvas");
         },
       ];
       let selectedArmorIndex = 0;
+      let selectedWeaponIndex = 0;
+
+      const coinAssets = [
+        {
+          id: "emas",
+          name: "Emas",
+          asset: "spr_coin_ama.png",
+          src: "assets/coin/spr_coin_ama.png",
+        },
+        {
+          id: "perak",
+          name: "Perak",
+          asset: "spr_coin_gri.png",
+          src: "assets/coin/spr_coin_gri.png",
+        },
+        {
+          id: "tembaga",
+          name: "Tembaga",
+          asset: "spr_coin_roj.png",
+          src: "assets/coin/spr_coin_roj.png",
+        },
+        {
+          id: "biru",
+          name: "Biru",
+          asset: "spr_coin_azu.png",
+          src: "assets/coin/spr_coin_azu.png",
+        },
+        {
+          id: "monedaD",
+          name: "MonedaD",
+          asset: "MonedaD.png",
+          src: "assets/coin/MonedaD.png",
+        },
+        {
+          id: "monedaP",
+          name: "MonedaP",
+          asset: "MonedaP.png",
+          src: "assets/coin/MonedaP.png",
+        },
+        {
+          id: "monedaR",
+          name: "MonedaR",
+          asset: "MonedaR.png",
+          src: "assets/coin/MonedaR.png",
+        },
+      ];
+
+      const coinDropTable = [
+        {
+          id: "tembaga",
+          name: "Tembaga",
+          src: "assets/coin/spr_coin_roj.png",
+          value: 1,
+          weight: 0.55,
+        },
+        {
+          id: "perak",
+          name: "Perak",
+          src: "assets/coin/spr_coin_gri.png",
+          value: 3,
+          weight: 0.25,
+        },
+        {
+          id: "emas",
+          name: "Emas",
+          src: "assets/coin/spr_coin_ama.png",
+          value: 7,
+          weight: 0.15,
+        },
+        {
+          id: "berlian",
+          name: "Berlian",
+          src: "assets/benih/gem04purple.png",
+          value: 15,
+          weight: 0.05,
+        },
+      ];
 
       const relicPool = [
         { name: "Relik Penjaga", effect: { coreMax: 15 } },
@@ -612,6 +714,12 @@ const canvas = document.getElementById("gameCanvas");
           if (weapon && weapon.icon) sources.push(weapon.icon);
           if (weapon && weapon.projectileSrc) sources.push(weapon.projectileSrc);
         });
+        Object.values(seedIcons).forEach((src) => {
+          if (src) sources.push(src);
+        });
+        coinDropTable.forEach((coin) => {
+          if (coin && coin.src) sources.push(coin.src);
+        });
         Object.values(tileSheets).forEach((item) => {
           if (item && item.src) sources.push(item.src);
         });
@@ -687,10 +795,14 @@ const canvas = document.getElementById("gameCanvas");
         weather: { name: "Normal", desc: "", coinsBonus: 0, enemySpeed: 0, healBonus: 0 },
         mapData: null,
         armorOwned: { none: true },
+        weaponOwned: { pedang: true },
         plants: [],
         enemies: [],
         projectiles: [],
         effects: [],
+        drops: [],
+        seedDropTimer: 0,
+        seedDropsRemaining: 0,
         waveTimer: 0,
         spawnQueue: [],
         kills: 0,
@@ -943,6 +1055,279 @@ const canvas = document.getElementById("gameCanvas");
             ui.armorAction.disabled = false;
           }
         }
+      }
+
+      function getFirstOwnedWeaponIndex() {
+        for (let i = 0; i < weapons.length; i += 1) {
+          const weapon = weapons[i];
+          if (weapon && game.weaponOwned[weapon.id]) return i;
+        }
+        return 0;
+      }
+
+      function ensureEquippedWeaponOwned() {
+        if (!game.player) return;
+        const current = weapons[game.player.weaponIndex];
+        if (!current || !game.weaponOwned[current.id]) {
+          game.player.weaponIndex = getFirstOwnedWeaponIndex();
+        }
+      }
+
+      function updateWeaponUI() {
+        if (!ui.weaponName) return;
+        const weapon = weapons[selectedWeaponIndex];
+        ui.weaponName.textContent = weapon ? weapon.name : "Senjata";
+        if (ui.weaponPrice) {
+          if (weapon) {
+            const price = weapon.price || 0;
+            ui.weaponPrice.textContent =
+              price > 0 ? `Harga: ${price} koin` : "Harga: Gratis";
+          } else {
+            ui.weaponPrice.textContent = "Harga: -";
+          }
+        }
+        if (ui.weaponPreview) {
+          if (weapon && weapon.icon) {
+            ui.weaponPreview.src = weapon.icon;
+            ui.weaponPreview.alt = weapon.name;
+            ui.weaponPreview.style.opacity = "1";
+          } else {
+            ui.weaponPreview.removeAttribute("src");
+            ui.weaponPreview.alt = "Senjata";
+            ui.weaponPreview.style.opacity = "0";
+          }
+        }
+        if (ui.weaponAction && weapon) {
+          const owned = Boolean(game.weaponOwned[weapon.id]);
+          const equipped =
+            weapons[game.player.weaponIndex] &&
+            weapons[game.player.weaponIndex].id === weapon.id;
+          if (!owned) {
+            ui.weaponAction.textContent = "Beli";
+            ui.weaponAction.disabled = game.coins < (weapon.price || 0);
+          } else if (equipped) {
+            ui.weaponAction.textContent = "Terpasang";
+            ui.weaponAction.disabled = true;
+          } else {
+            ui.weaponAction.textContent = "Pakai";
+            ui.weaponAction.disabled = false;
+          }
+        }
+      }
+
+      function setWeaponIndex(index) {
+        const total = weapons.length;
+        if (!total) return;
+        const next = ((index % total) + total) % total;
+        selectedWeaponIndex = next;
+        updateWeaponUI();
+      }
+
+      function selectPlant(type) {
+        if (!plantDefs[type]) return;
+        selectedPlant = type;
+        renderPlantList();
+        updateSeedBar();
+      }
+
+      function updateSeedBar() {
+        if (!seedSlots.length) return;
+        if (ui.seedBarTitle) {
+          if (game.phase === "persiapan") {
+            ui.seedBarTitle.textContent = "Koleksi Benih";
+          } else if (game.phase === "pertahanan") {
+            ui.seedBarTitle.textContent = "Koleksi Benih (Pertahanan)";
+          } else if (game.phase === "eksplorasi") {
+            ui.seedBarTitle.textContent = "Koleksi Benih (Eksplorasi)";
+          } else {
+            ui.seedBarTitle.textContent = "Koleksi Benih (Peningkatan)";
+          }
+        }
+        seedSlots.forEach((slot) => {
+          const key = slot.dataset.seed;
+          if (!key) return;
+          const count = game.seeds[key] ?? 0;
+          const countEl = slot.querySelector(".seed-count");
+          if (countEl) countEl.textContent = count;
+          slot.classList.toggle("active", selectedPlant === key);
+          slot.classList.toggle("empty", count <= 0);
+        });
+      }
+
+      function pickWeighted(items) {
+        const total = items.reduce((acc, item) => acc + item.weight, 0);
+        let roll = Math.random() * total;
+        for (const item of items) {
+          roll -= item.weight;
+          if (roll <= 0) return item;
+        }
+        return items[0];
+      }
+
+      function getDropBounds() {
+        return {
+          minX: gridStartX + 12,
+          maxX: gridEndX - 12,
+          minY: boardOffsetY + 12,
+          maxY: boardOffsetY + boardHeight - 16,
+          groundY: boardOffsetY + boardHeight - 12,
+        };
+      }
+
+      function spawnCoinDrop() {
+        const bounds = getDropBounds();
+        const coin = pickWeighted(coinDropTable);
+        game.drops.push({
+          type: "coin",
+          id: coin.id,
+          name: coin.name,
+          value: coin.value,
+          sprite: coin.src,
+          x: bounds.minX + Math.random() * (bounds.maxX - bounds.minX),
+          y: bounds.minY + Math.random() * (bounds.maxY - bounds.minY),
+          vy: 0,
+          size: 20,
+        });
+      }
+
+      function spawnSeedDrop() {
+        const bounds = getDropBounds();
+        const types = Object.keys(seedIcons);
+        const seedType = types[randRange(0, types.length - 1)];
+        game.drops.push({
+          type: "seed",
+          seedType,
+          sprite: seedIcons[seedType],
+          x: bounds.minX + Math.random() * (bounds.maxX - bounds.minX),
+          y: bounds.minY - 24,
+          vy: 40 + Math.random() * 40,
+          size: 18,
+        });
+      }
+
+      function clearExplorationDrops() {
+        game.drops = [];
+        game.seedDropTimer = 0;
+        game.seedDropsRemaining = 0;
+      }
+
+      function startExplorationDrops() {
+        clearExplorationDrops();
+        const baseCoins = randRange(8, 12);
+        const bonusCoins = Math.floor(game.skills.exploration * 2);
+        const totalCoins = baseCoins + bonusCoins;
+        for (let i = 0; i < totalCoins; i += 1) {
+          spawnCoinDrop();
+        }
+        const baseSeeds = randRange(5, 8);
+        const bonusSeeds = Math.floor(game.skills.exploration * 1.2);
+        game.seedDropsRemaining = baseSeeds + bonusSeeds;
+        game.seedDropTimer = 0.6;
+      }
+
+      function updateDrops(dt) {
+        if (game.phase !== "eksplorasi") return;
+        if (game.seedDropsRemaining > 0) {
+          game.seedDropTimer -= dt;
+          if (game.seedDropTimer <= 0) {
+            spawnSeedDrop();
+            game.seedDropsRemaining -= 1;
+            game.seedDropTimer = 0.6 + Math.random() * 0.8;
+          }
+        }
+        const bounds = getDropBounds();
+        let pickedSomething = false;
+        game.drops.forEach((drop) => {
+          if (drop.vy) {
+            drop.vy += 140 * dt;
+            drop.y += drop.vy * dt;
+            if (drop.y >= bounds.groundY) {
+              drop.y = bounds.groundY;
+              drop.vy = 0;
+            }
+          }
+          const dx = drop.x - game.player.x;
+          const dy = drop.y - game.player.y;
+          if (dx * dx + dy * dy <= 18 * 18) {
+            if (drop.type === "coin") {
+              game.coins += drop.value;
+              if (drop.id === "berlian") {
+                log("Berlian ditemukan!");
+              }
+            } else if (drop.type === "seed") {
+              game.seeds[drop.seedType] += 1;
+            }
+            drop.collected = true;
+            pickedSomething = true;
+          }
+        });
+        if (pickedSomething) {
+          updateUI();
+        }
+        game.drops = game.drops.filter((drop) => !drop.collected);
+      }
+
+      function setupCoinMenu() {
+        if (!ui.coinMenu) return;
+        ui.coinMenu.innerHTML = "";
+        coinAssets.forEach((coin) => {
+          const item = document.createElement("div");
+          item.className = "coin-item";
+          item.innerHTML = `
+            <img src="${coin.src}" alt="${coin.name}" />
+            <div>
+              <div class="coin-name">${coin.name}</div>
+              <div class="coin-asset">${coin.asset}</div>
+            </div>
+          `;
+          ui.coinMenu.appendChild(item);
+        });
+      }
+
+      function toggleCoinMenu(force) {
+        if (!ui.coinMenu || !ui.coinSlot) return;
+        const shouldShow = typeof force === "boolean"
+          ? force
+          : !ui.coinMenu.classList.contains("show");
+        ui.coinMenu.classList.toggle("show", shouldShow);
+        ui.coinSlot.setAttribute("aria-expanded", shouldShow ? "true" : "false");
+      }
+
+      function getNextOwnedWeaponIndex(startIndex, dir) {
+        const total = weapons.length;
+        if (!total) return 0;
+        for (let step = 1; step <= total; step += 1) {
+          const idx = (startIndex + dir * step + total) % total;
+          const weapon = weapons[idx];
+          if (weapon && game.weaponOwned[weapon.id]) return idx;
+        }
+        return startIndex;
+      }
+
+      function equipWeapon(index) {
+        const weapon = weapons[index];
+        if (!weapon || !game.weaponOwned[weapon.id]) return;
+        if (game.player) {
+          game.player.weaponIndex = index;
+        }
+        selectedWeaponIndex = index;
+        log(`Senjata ${weapon.name} dipakai.`);
+        updateUI();
+      }
+
+      function buyWeapon(index) {
+        const weapon = weapons[index];
+        if (!weapon || game.weaponOwned[weapon.id]) return;
+        const price = weapon.price || 0;
+        if (game.coins < price) {
+          log("Koin tidak cukup untuk membeli senjata.");
+          return;
+        }
+        game.coins -= price;
+        game.weaponOwned[weapon.id] = true;
+        log(`Senjata ${weapon.name} dibeli.`);
+        equipWeapon(index);
+        updateUI();
       }
 
       function setArmorIndex(index) {
@@ -1216,6 +1601,7 @@ const canvas = document.getElementById("gameCanvas");
         }
         if (game.phase !== "persiapan") return;
         game.phase = "pertahanan";
+        clearExplorationDrops();
         game.waveTimer = 0;
         game.spawnQueue = createWave(game.waveInMap);
         game.kills = 0;
@@ -1288,6 +1674,7 @@ const canvas = document.getElementById("gameCanvas");
       function endDefense() {
         if (game.phase !== "pertahanan") return;
         game.phase = "eksplorasi";
+        startExplorationDrops();
         const harvest = Math.round(
           game.plants.length * (2 + game.skills.farming * 0.4)
         );
@@ -1321,6 +1708,7 @@ const canvas = document.getElementById("gameCanvas");
           return;
         }
         game.phase = "upgrade";
+        clearExplorationDrops();
         log("Masuk fase peningkatan dan bertani.");
         updateUI();
       }
@@ -1342,6 +1730,7 @@ const canvas = document.getElementById("gameCanvas");
           game.waveInMap += 1;
         }
         game.phase = "persiapan";
+        clearExplorationDrops();
         game.player.hp = game.player.maxHp;
         log(`Persiapan gelombang ${game.waveInMap}. Siapkan pertahanan baru.`);
         updateUI();
@@ -1533,14 +1922,14 @@ const canvas = document.getElementById("gameCanvas");
             <div class="plant-cost">Benih ${game.seeds[type]} | Koin ${coinCost}</div>
           `;
           button.addEventListener("click", () => {
-            selectedPlant = type;
-            renderPlantList();
+            selectPlant(type);
           });
           ui.plantList.appendChild(button);
         });
       }
 
       function updateUI() {
+        ensureEquippedWeaponOwned();
         ui.waveValue.textContent = `${game.waveInMap}/${maxWavesPerMap}`;
         ui.mapValue.textContent = mapSequence[game.mapIndex].label;
         ui.trophyValue.textContent = game.trophies;
@@ -1578,7 +1967,9 @@ const canvas = document.getElementById("gameCanvas");
         }
 
         updateArmorUI();
+        updateWeaponUI();
         renderPlantList();
+        updateSeedBar();
         syncSettingsControls();
       }
 
@@ -1836,7 +2227,10 @@ const canvas = document.getElementById("gameCanvas");
             player.stateDuration = 0;
           }
         }
-        const canMove = game.phase === "pertahanan" || game.phase === "persiapan";
+        const canMove =
+          game.phase === "pertahanan" ||
+          game.phase === "persiapan" ||
+          game.phase === "eksplorasi";
         if (!canMove) {
           player.moving = false;
           player.animTime += dt * 0.35;
@@ -1910,6 +2304,10 @@ const canvas = document.getElementById("gameCanvas");
           if (!game.spawnQueue.length && !game.enemies.length) {
             endDefense();
           }
+        }
+
+        if (game.phase === "eksplorasi") {
+          updateDrops(dt);
         }
 
         if (!game.paused && (game.core.hp <= 0 || game.lives <= 0)) {
@@ -2358,6 +2756,21 @@ const canvas = document.getElementById("gameCanvas");
         });
       }
 
+      function drawDrops() {
+        game.drops.forEach((drop) => {
+          const img = drop.sprite ? getSpriteImage(drop.sprite) : null;
+          const size = drop.size || 18;
+          if (img) {
+            ctx.drawImage(img, drop.x - size / 2, drop.y - size / 2, size, size);
+            return;
+          }
+          ctx.fillStyle = drop.type === "coin" ? "#f6c65b" : "#7dd3fc";
+          ctx.beginPath();
+          ctx.arc(drop.x, drop.y, size * 0.4, 0, Math.PI * 2);
+          ctx.fill();
+        });
+      }
+
       function drawEnemyBody(enemy) {
         const x = enemy.x;
         const y = enemy.y;
@@ -2653,6 +3066,7 @@ const canvas = document.getElementById("gameCanvas");
         }
         drawCore();
         drawPlants();
+        drawDrops();
         drawEnemies();
         drawPlayer();
         drawProjectiles();
@@ -2704,10 +3118,14 @@ const canvas = document.getElementById("gameCanvas");
         game.weather = { name: "Normal", desc: "", coinsBonus: 0, enemySpeed: 0, healBonus: 0 };
         game.mapData = null;
         game.armorOwned = { none: true };
+        game.weaponOwned = { pedang: true };
         game.plants = [];
         game.enemies = [];
         game.projectiles = [];
         game.effects = [];
+        game.drops = [];
+        game.seedDropTimer = 0;
+        game.seedDropsRemaining = 0;
         game.spawnQueue = [];
         game.waveTimer = 0;
         game.explorationDone = false;
@@ -2735,6 +3153,7 @@ const canvas = document.getElementById("gameCanvas");
           maxHp: 100,
         };
         selectedArmorIndex = 0;
+        selectedWeaponIndex = 0;
         selectedPlant = "mage";
         selectedCell = { row: 2, col: 2 };
         hoverCell = null;
@@ -2857,6 +3276,54 @@ const canvas = document.getElementById("gameCanvas");
           }
         });
       }
+      if (ui.weaponPrev) {
+        ui.weaponPrev.addEventListener("click", () => {
+          setWeaponIndex(selectedWeaponIndex - 1);
+        });
+      }
+      if (ui.weaponNext) {
+        ui.weaponNext.addEventListener("click", () => {
+          setWeaponIndex(selectedWeaponIndex + 1);
+        });
+      }
+      if (ui.weaponAction) {
+        ui.weaponAction.addEventListener("click", () => {
+          const weapon = weapons[selectedWeaponIndex];
+          if (!weapon) return;
+          if (game.weaponOwned[weapon.id]) {
+            equipWeapon(selectedWeaponIndex);
+          } else {
+            buyWeapon(selectedWeaponIndex);
+          }
+        });
+      }
+      if (seedSlots.length) {
+        seedSlots.forEach((slot) => {
+          slot.addEventListener("click", () => {
+            const key = slot.dataset.seed;
+            if (!key) return;
+            selectPlant(key);
+          });
+        });
+      }
+      if (ui.coinSlot) {
+        ui.coinSlot.addEventListener("click", (event) => {
+          event.stopPropagation();
+          toggleCoinMenu();
+        });
+      }
+      if (ui.coinMenu) {
+        ui.coinMenu.addEventListener("click", (event) => {
+          event.stopPropagation();
+        });
+      }
+      window.addEventListener("click", (event) => {
+        if (!ui.coinMenu || !ui.coinSlot) return;
+        if (ui.coinMenu.contains(event.target) || ui.coinSlot.contains(event.target)) {
+          return;
+        }
+        toggleCoinMenu(false);
+      });
 
       function handleCanvasClick(event) {
         const rect = canvas.getBoundingClientRect();
@@ -2900,8 +3367,9 @@ const canvas = document.getElementById("gameCanvas");
           if (game.phase !== "pertahanan") return;
           event.preventDefault();
           const dir = event.deltaY > 0 ? 1 : -1;
-          game.player.weaponIndex =
-            (game.player.weaponIndex + dir + weapons.length) % weapons.length;
+          const nextIndex = getNextOwnedWeaponIndex(game.player.weaponIndex, dir);
+          game.player.weaponIndex = nextIndex;
+          selectedWeaponIndex = nextIndex;
           updateUI();
         },
         { passive: false }
@@ -2971,7 +3439,7 @@ const canvas = document.getElementById("gameCanvas");
         const moveKey = getMoveKey(event);
         if (moveKey) {
           keys[moveKey] = true;
-          if (game.phase !== "pertahanan") {
+          if (game.phase === "persiapan") {
             applySelectionMove(moveKey);
           }
           event.preventDefault();
@@ -3005,5 +3473,6 @@ const canvas = document.getElementById("gameCanvas");
 
       loadSprites();
       setupSettingsControls();
+      setupCoinMenu();
       resetGame();
       requestAnimationFrame(loop);
