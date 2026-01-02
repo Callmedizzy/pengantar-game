@@ -59,6 +59,10 @@ const canvas = document.getElementById("gameCanvas");
         coinSlot: document.getElementById("coinSlot"),
         shopSlot: document.getElementById("shopSlot"),
         coinMenu: document.getElementById("coinMenu"),
+        pauseButton: document.getElementById("pauseButton"),
+        inventoryToggle: document.getElementById("inventoryToggle"),
+        tasPanel: document.getElementById("tasPanel"),
+        miniMapButton: document.getElementById("miniMapButton"),
       };
 
       const seedSlots = Array.from(document.querySelectorAll(".seed-slot"));
@@ -68,6 +72,7 @@ const canvas = document.getElementById("gameCanvas");
       const tutorialButton = document.getElementById("tutorialButton");
       let hasStarted = false;
       let shopUi = null;
+      let overlayContext = "none";
 
       const rows = 6;
       const cols = 8;
@@ -1366,6 +1371,29 @@ const canvas = document.getElementById("gameCanvas");
         ui.coinSlot.setAttribute("aria-expanded", shouldShow ? "true" : "false");
       }
 
+      function setPauseButtonExpanded(isExpanded) {
+        if (!ui.pauseButton) return;
+        ui.pauseButton.setAttribute("aria-expanded", isExpanded ? "true" : "false");
+      }
+
+      function setMiniMapButtonExpanded(isExpanded) {
+        if (!ui.miniMapButton) return;
+        ui.miniMapButton.setAttribute("aria-expanded", isExpanded ? "true" : "false");
+      }
+
+      function toggleInventoryPanel(force) {
+        if (!ui.tasPanel || !ui.inventoryToggle) return;
+        const shouldShow = typeof force === "boolean"
+          ? force
+          : !ui.tasPanel.classList.contains("show");
+        ui.tasPanel.classList.toggle("show", shouldShow);
+        ui.tasPanel.setAttribute("aria-hidden", shouldShow ? "false" : "true");
+        ui.inventoryToggle.setAttribute("aria-expanded", shouldShow ? "true" : "false");
+        if (!shouldShow) {
+          toggleCoinMenu(false);
+        }
+      }
+
       function getNextOwnedWeaponIndex(startIndex, dir) {
         const total = weapons.length;
         if (!total) return 0;
@@ -1931,7 +1959,8 @@ const canvas = document.getElementById("gameCanvas");
         updateUI();
       }
 
-      function showOverlay(title, bodyHtml, actions) {
+      function showOverlay(title, bodyHtml, actions, context = "generic") {
+        overlayContext = context;
         ui.overlayTitle.textContent = title;
         ui.overlayBody.innerHTML = bodyHtml;
         ui.overlayActions.innerHTML = "";
@@ -1953,10 +1982,141 @@ const canvas = document.getElementById("gameCanvas");
         ui.overlayBody.innerHTML = "";
         ui.overlayActions.innerHTML = "";
         shopUi = null;
+        overlayContext = "none";
+        setPauseButtonExpanded(false);
+        setMiniMapButtonExpanded(false);
         if (ui.shopSlot) {
           ui.shopSlot.setAttribute("aria-expanded", "false");
         }
         game.paused = !hasStarted;
+      }
+
+      function openMiniMap() {
+        if (ui.overlay.classList.contains("show") && overlayContext === "minimap") {
+          hideOverlay();
+          return;
+        }
+        toggleInventoryPanel(false);
+        const body = `
+          <div class="map-preview">
+            <div class="map-frame">
+              <img src="assets/Map/Semua Map.jpg" alt="Peta dunia" loading="lazy" />
+            </div>
+          </div>
+        `;
+        showOverlay(
+          "Peta Dunia",
+          body,
+          [{ label: "Tutup", className: "secondary", onClick: hideOverlay }],
+          "minimap"
+        );
+        setMiniMapButtonExpanded(true);
+        setPauseButtonExpanded(false);
+      }
+
+      function openPauseMenu() {
+        if (ui.overlay.classList.contains("show") && overlayContext === "pause") {
+          hideOverlay();
+          return;
+        }
+        toggleInventoryPanel(false);
+        setMiniMapButtonExpanded(false);
+        const body = `
+          <div class="panel-section">
+            <h2>Menu Jeda</h2>
+            <p>Game dijeda. Lanjutkan, atur pengaturan, atau kembali ke menu.</p>
+          </div>
+        `;
+        showOverlay(
+          "Menu Jeda",
+          body,
+          [
+            { label: "Resume", onClick: hideOverlay },
+            { label: "Pengaturan", className: "secondary", onClick: openSettingsMenu },
+            { label: "Tutorial", className: "secondary", onClick: openTutorial },
+            { label: "Ulang Game", className: "secondary", onClick: () => {
+              hideOverlay();
+              resetGame();
+            } },
+            { label: "Keluar ke Menu", className: "danger", onClick: () => {
+              hideOverlay();
+              hasStarted = false;
+              resetGame();
+            } },
+          ],
+          "pause"
+        );
+        setPauseButtonExpanded(true);
+      }
+
+      function openSettingsMenu() {
+        const body = `
+          <div class="panel-section">
+            <h2>Pengaturan</h2>
+            <div class="option-grid">
+              <div class="option-row">
+                <label for="menuLevelSelect">Level Awal</label>
+                <select id="menuLevelSelect"></select>
+              </div>
+              <div class="option-row">
+                <label for="menuMapSelect">Pilih Peta</label>
+                <select id="menuMapSelect"></select>
+              </div>
+            </div>
+          </div>
+        `;
+        showOverlay(
+          "Pengaturan",
+          body,
+          [
+            { label: "Kembali", className: "secondary", onClick: openPauseMenu },
+            { label: "Tutup", className: "secondary", onClick: hideOverlay },
+          ],
+          "settings"
+        );
+        setPauseButtonExpanded(true);
+        setMiniMapButtonExpanded(false);
+
+        const disableSelects = game.phase === "pertahanan";
+        const menuMapSelect = document.getElementById("menuMapSelect");
+        if (menuMapSelect) {
+          menuMapSelect.innerHTML = "";
+          mapSequence.forEach((map, index) => {
+            const option = document.createElement("option");
+            option.value = String(index);
+            option.textContent = map.label;
+            menuMapSelect.appendChild(option);
+          });
+          menuMapSelect.value = String(game.mapIndex);
+          menuMapSelect.disabled = disableSelects;
+          menuMapSelect.addEventListener("change", () => {
+            const nextIndex = Number.parseInt(menuMapSelect.value, 10);
+            if (Number.isNaN(nextIndex)) return;
+            if (!setMapIndex(nextIndex)) {
+              menuMapSelect.value = String(game.mapIndex);
+            }
+          });
+        }
+
+        const menuLevelSelect = document.getElementById("menuLevelSelect");
+        if (menuLevelSelect) {
+          menuLevelSelect.innerHTML = "";
+          for (let level = 1; level <= maxSelectableLevel; level += 1) {
+            const option = document.createElement("option");
+            option.value = String(level);
+            option.textContent = String(level);
+            menuLevelSelect.appendChild(option);
+          }
+          menuLevelSelect.value = String(game.level);
+          menuLevelSelect.disabled = disableSelects;
+          menuLevelSelect.addEventListener("change", () => {
+            const nextLevel = Number.parseInt(menuLevelSelect.value, 10);
+            if (Number.isNaN(nextLevel)) return;
+            if (!setLevel(nextLevel)) {
+              menuLevelSelect.value = String(game.level);
+            }
+          });
+        }
       }
 
       function showVictory() {
@@ -2745,8 +2905,8 @@ const canvas = document.getElementById("gameCanvas");
       function drawHud() {
         const panelX = 12;
         const panelY = 12;
-        const panelW = 176;
-        const panelH = 58;
+        const panelW = 140;
+        const panelH = 46;
         ctx.save();
         ctx.fillStyle = "rgba(20, 26, 36, 0.92)";
         ctx.fillRect(panelX, panelY, panelW, panelH);
@@ -2754,12 +2914,12 @@ const canvas = document.getElementById("gameCanvas");
         ctx.lineWidth = 2;
         ctx.strokeRect(panelX + 1, panelY + 1, panelW - 2, panelH - 2);
 
-        const heartPixel = 2;
+        const heartPixel = 1;
         const heartSize = 8 * heartPixel;
-        const heartGap = 4;
+        const heartGap = 2;
         const maxHearts = 5;
-        const heartsX = panelX + 10;
-        const heartsY = panelY + 8;
+        const heartsX = panelX + 8;
+        const heartsY = panelY + 6;
         for (let i = 0; i < maxHearts; i += 1) {
           drawPixelHeart(
             heartsX + i * (heartSize + heartGap),
@@ -2769,13 +2929,13 @@ const canvas = document.getElementById("gameCanvas");
           );
         }
 
-        const barX = panelX + 10;
-        const barW = panelW - 20;
+        const barX = panelX + 8;
+        const barW = panelW - 16;
         drawPixelBar(
           barX,
-          panelY + 30,
+          panelY + 22,
           barW,
-          10,
+          8,
           game.player.hp / game.player.maxHp,
           "#7de065",
           "#2f3b2f",
@@ -2783,9 +2943,9 @@ const canvas = document.getElementById("gameCanvas");
         );
         drawPixelBar(
           barX,
-          panelY + 42,
+          panelY + 32,
           barW,
-          10,
+          8,
           game.core.hp / game.core.maxHp,
           "#e25b5b",
           "#3a2424",
@@ -3542,6 +3702,17 @@ const canvas = document.getElementById("gameCanvas");
       if (tutorialButton) {
         tutorialButton.addEventListener("click", openTutorial);
       }
+      if (ui.pauseButton) {
+        ui.pauseButton.addEventListener("click", openPauseMenu);
+      }
+      if (ui.miniMapButton) {
+        ui.miniMapButton.addEventListener("click", openMiniMap);
+      }
+      if (ui.inventoryToggle) {
+        ui.inventoryToggle.addEventListener("click", () => {
+          toggleInventoryPanel();
+        });
+      }
       if (ui.mapSelect) {
         ui.mapSelect.addEventListener("change", () => {
           const nextIndex = Number.parseInt(ui.mapSelect.value, 10);
@@ -3640,11 +3811,20 @@ const canvas = document.getElementById("gameCanvas");
         });
       }
       window.addEventListener("click", (event) => {
-        if (!ui.coinMenu || !ui.coinSlot) return;
-        if (ui.coinMenu.contains(event.target) || ui.coinSlot.contains(event.target)) {
-          return;
+        const target = event.target;
+        if (ui.tasPanel && ui.inventoryToggle) {
+          const clickedPanel = ui.tasPanel.contains(target);
+          const clickedToggle = ui.inventoryToggle.contains(target);
+          if (ui.tasPanel.classList.contains("show") && !clickedPanel && !clickedToggle) {
+            toggleInventoryPanel(false);
+          }
         }
-        toggleCoinMenu(false);
+        if (ui.coinMenu && ui.coinSlot) {
+          const clickedCoin = ui.coinMenu.contains(target) || ui.coinSlot.contains(target);
+          if (!clickedCoin) {
+            toggleCoinMenu(false);
+          }
+        }
       });
 
       function handleCanvasClick(event) {
@@ -3725,6 +3905,10 @@ const canvas = document.getElementById("gameCanvas");
         if (key === "escape") {
           if (ui.overlay.classList.contains("show")) {
             hideOverlay();
+            return;
+          }
+          if (ui.tasPanel && ui.tasPanel.classList.contains("show")) {
+            toggleInventoryPanel(false);
             return;
           }
           game.paused = !game.paused;

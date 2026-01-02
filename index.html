@@ -49,50 +49,105 @@
           <div class="canvas-wrap">
             <div class="scene-tag" id="sceneTag">Hidup & Persiapan</div>
             <canvas id="gameCanvas" width="710" height="710"></canvas>
-          </div>
-          <div class="seed-bar" id="seedBar">
-            <div class="seed-bar-title" id="seedBarTitle">Tas</div>
-            <div class="seed-grid">
-              <button class="seed-slot" type="button" data-seed="mage">
-                <img src="assets/Tumbuhan/Kipli 3.png" alt="Benih Kipli 3" />
-                <span class="seed-count" data-seed-count="mage">0</span>
-              </button>
-              <button class="seed-slot" type="button" data-seed="slow">
-                <img src="assets/Tumbuhan/Kucing.png" alt="Benih Kucing" />
-                <span class="seed-count" data-seed-count="slow">0</span>
-              </button>
-              <button class="seed-slot" type="button" data-seed="heal">
-                <img src="assets/Tumbuhan/Pemakan.png" alt="Benih Pemakan" />
-                <span class="seed-count" data-seed-count="heal">0</span>
-              </button>
-              <button class="seed-slot" type="button" data-seed="buff">
-                <img src="assets/Tumbuhan/Perisai.png" alt="Benih Perisai" />
-                <span class="seed-count" data-seed-count="buff">0</span>
-              </button>
+            <div class="quick-panel" id="quickPanel">
               <button
-                class="seed-slot coin-slot"
-                id="coinSlot"
+                class="quick-button"
+                id="miniMapButton"
                 type="button"
-                aria-haspopup="true"
-                aria-expanded="false"
-              >
-                <img class="slot-icon" src="assets/Logo/Uang.png" alt="" aria-hidden="true" />
-              </button>
-              <button class="seed-slot bag-slot" type="button" disabled>
-                <img class="slot-icon" src="assets/Logo/Tas.png" alt="" aria-hidden="true" />
-              </button>
-              <button
-                class="seed-slot shop-slot"
-                id="shopSlot"
-                type="button"
-                aria-label="Toko peralatan"
+                aria-label="Mini map"
                 aria-haspopup="dialog"
                 aria-expanded="false"
               >
-                <img class="slot-icon" src="assets/Logo/Toko.png" alt="" aria-hidden="true" />
+                <img class="quick-icon-img" src="assets/Logo/Mini Map.png" alt="" aria-hidden="true" />
+                <span class="quick-label">Map</span>
               </button>
+              <button
+                class="quick-button"
+                id="pauseButton"
+                type="button"
+                aria-label="Menu jeda"
+                aria-haspopup="dialog"
+                aria-expanded="false"
+              >
+                <span class="quick-icon pause-icon" aria-hidden="true">
+                  <span></span>
+                  <span></span>
+                </span>
+                <span class="quick-label">Menu</span>
+              </button>
+              <button
+                class="quick-button"
+                id="inventoryToggle"
+                type="button"
+                aria-label="Tas"
+                aria-haspopup="true"
+                aria-expanded="false"
+              >
+                <img class="quick-icon-img" src="assets/Logo/Tas.png" alt="" aria-hidden="true" />
+                <span class="quick-label">Tas</span>
+              </button>
+              <div class="tas-panel" id="tasPanel" aria-hidden="true">
+                <div class="seed-bar" id="seedBar">
+                  <div class="seed-bar-title" id="seedBarTitle">Tas</div>
+                  <div class="seed-grid">
+                    <button class="seed-slot" type="button" data-seed="mage">
+                      <img src="assets/Tumbuhan/Kipli 3.png" alt="Benih Kipli 3" />
+                      <span class="seed-count" data-seed-count="mage">0</span>
+                    </button>
+                    <button class="seed-slot" type="button" data-seed="slow">
+                      <img src="assets/Tumbuhan/Kucing.png" alt="Benih Kucing" />
+                      <span class="seed-count" data-seed-count="slow">0</span>
+                    </button>
+                    <button class="seed-slot" type="button" data-seed="heal">
+                      <img src="assets/Tumbuhan/Pemakan.png" alt="Benih Pemakan" />
+                      <span class="seed-count" data-seed-count="heal">0</span>
+                    </button>
+                    <button class="seed-slot" type="button" data-seed="buff">
+                      <img src="assets/Tumbuhan/Perisai.png" alt="Benih Perisai" />
+                      <span class="seed-count" data-seed-count="buff">0</span>
+                    </button>
+                    <button
+                      class="seed-slot coin-slot"
+                      id="coinSlot"
+                      type="button"
+                      aria-haspopup="true"
+                      aria-expanded="false"
+                    >
+                      <img
+                        class="slot-icon"
+                        src="assets/Logo/Uang.png"
+                        alt=""
+                        aria-hidden="true"
+                      />
+                    </button>
+                    <button class="seed-slot bag-slot" type="button" disabled>
+                      <img class="slot-icon" src="assets/Logo/Tas.png" alt="" aria-hidden="true" />
+                    </button>
+                    <button
+                      class="seed-slot shop-slot"
+                      id="shopSlot"
+                      type="button"
+                      aria-label="Toko peralatan"
+                      aria-haspopup="dialog"
+                      aria-expanded="false"
+                    >
+                      <img
+                        class="slot-icon"
+                        src="assets/Logo/Toko.png"
+                        alt=""
+                        aria-hidden="true"
+                      />
+                    </button>
+                  </div>
+                  <div
+                    class="coin-menu"
+                    id="coinMenu"
+                    role="menu"
+                    aria-label="Daftar koin"
+                  ></div>
+                </div>
+              </div>
             </div>
-            <div class="coin-menu" id="coinMenu" role="menu" aria-label="Daftar koin"></div>
           </div>
           <div class="board-footer">
             <div id="statusText">Fase: Persiapan</div>
