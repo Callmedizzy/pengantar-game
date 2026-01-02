@@ -57,6 +57,7 @@ const canvas = document.getElementById("gameCanvas");
         startDefenseAlt: document.getElementById("startDefenseAlt"),
         seedBarTitle: document.getElementById("seedBarTitle"),
         coinSlot: document.getElementById("coinSlot"),
+        shopSlot: document.getElementById("shopSlot"),
         coinMenu: document.getElementById("coinMenu"),
       };
 
@@ -64,7 +65,9 @@ const canvas = document.getElementById("gameCanvas");
 
       const startScreen = document.getElementById("startScreen");
       const startButton = document.getElementById("startButton");
+      const tutorialButton = document.getElementById("tutorialButton");
       let hasStarted = false;
+      let shopUi = null;
 
       const rows = 6;
       const cols = 8;
@@ -113,52 +116,54 @@ const canvas = document.getElementById("gameCanvas");
 
       const plantDefs = {
         mage: {
-          name: "Penyihir",
+          name: "Kipli 3",
           cost: { benih: 1, koin: 12 },
           damage: 7,
           range: 220,
-          cooldown: 1.1,
+          burstShots: 3,
+          burstDelay: 2,
           hp: 48,
           color: "#3a7bd5",
-          symbol: "M",
+          sprite: "assets/Tumbuhan/Kipli 3.png",
+          spriteScale: 0.62,
         },
         slow: {
-          name: "Pelambat",
+          name: "Kucing",
           cost: { benih: 1, koin: 10 },
-          damage: 3,
+          damage: 2,
           range: 200,
-          cooldown: 1.5,
+          cooldown: 0.1,
           hp: 52,
-          slow: 0.45,
-          slowDuration: 2.6,
           color: "#2a9d8f",
-          symbol: "L",
+          sprite: "assets/Tumbuhan/Kucing.png",
+          spriteScale: 0.62,
         },
         heal: {
-          name: "Penyembuh",
+          name: "Pemakan",
           cost: { benih: 1, koin: 14 },
-          heal: 6,
           range: 120,
-          cooldown: 2.2,
-          hp: 44,
+          eatDuration: 3,
+          hp: 60,
           color: "#7fb069",
-          symbol: "H",
+          sprite: "assets/Tumbuhan/Pemakan.png",
+          spriteScale: 0.62,
         },
         buff: {
-          name: "Penguat",
+          name: "Perisai",
           cost: { benih: 1, koin: 11 },
-          buff: 0.25,
-          hp: 60,
-          color: "#f4a261",
-          symbol: "U",
+          hp: 70,
+          shield: 70,
+          color: "#4ea8de",
+          sprite: "assets/Tumbuhan/Perisai.png",
+          spriteScale: 0.62,
         },
       };
 
       const seedIcons = {
-        mage: "assets/benih/gem02blue.png",
-        slow: "assets/benih/gem06green.png",
-        heal: "assets/benih/gem05red.png",
-        buff: "assets/benih/gem03yellow.png",
+        mage: "assets/Tumbuhan/Kipli 3.png",
+        slow: "assets/Tumbuhan/Kucing.png",
+        heal: "assets/Tumbuhan/Pemakan.png",
+        buff: "assets/Tumbuhan/Perisai.png",
       };
 
       const enemyDefs = {
@@ -344,77 +349,46 @@ const canvas = document.getElementById("gameCanvas");
 
       const coinAssets = [
         {
-          id: "emas",
-          name: "Emas",
-          asset: "spr_coin_ama.png",
-          src: "assets/coin/spr_coin_ama.png",
+          id: "koin",
+          name: "Koin",
+          src: "assets/Mata Uang/Koin.png",
+          unitValue: 10000,
         },
         {
-          id: "perak",
-          name: "Perak",
-          asset: "spr_coin_gri.png",
-          src: "assets/coin/spr_coin_gri.png",
+          id: "berlian",
+          name: "Berlian",
+          src: "assets/Mata Uang/Berlian.png",
+          unitValue: 10,
         },
         {
-          id: "tembaga",
-          name: "Tembaga",
-          asset: "spr_coin_roj.png",
-          src: "assets/coin/spr_coin_roj.png",
-        },
-        {
-          id: "biru",
-          name: "Biru",
-          asset: "spr_coin_azu.png",
-          src: "assets/coin/spr_coin_azu.png",
-        },
-        {
-          id: "monedaD",
-          name: "MonedaD",
-          asset: "MonedaD.png",
-          src: "assets/coin/MonedaD.png",
-        },
-        {
-          id: "monedaP",
-          name: "MonedaP",
-          asset: "MonedaP.png",
-          src: "assets/coin/MonedaP.png",
-        },
-        {
-          id: "monedaR",
-          name: "MonedaR",
-          asset: "MonedaR.png",
-          src: "assets/coin/MonedaR.png",
+          id: "ruby",
+          name: "Ruby",
+          src: "assets/Mata Uang/Ruby.png",
+          unitValue: 1,
         },
       ];
 
       const coinDropTable = [
         {
-          id: "tembaga",
-          name: "Tembaga",
-          src: "assets/coin/spr_coin_roj.png",
+          id: "koin",
+          name: "Koin",
+          src: "assets/Mata Uang/Koin.png",
           value: 1,
-          weight: 0.55,
-        },
-        {
-          id: "perak",
-          name: "Perak",
-          src: "assets/coin/spr_coin_gri.png",
-          value: 3,
-          weight: 0.25,
-        },
-        {
-          id: "emas",
-          name: "Emas",
-          src: "assets/coin/spr_coin_ama.png",
-          value: 7,
-          weight: 0.15,
+          weight: 0.75,
         },
         {
           id: "berlian",
           name: "Berlian",
-          src: "assets/benih/gem04purple.png",
+          src: "assets/Mata Uang/Berlian.png",
+          value: 4,
+          weight: 0.249,
+        },
+        {
+          id: "ruby",
+          name: "Ruby",
+          src: "assets/Mata Uang/Ruby.png",
           value: 15,
-          weight: 0.05,
+          weight: 0.001,
         },
       ];
 
@@ -717,6 +691,9 @@ const canvas = document.getElementById("gameCanvas");
         Object.values(seedIcons).forEach((src) => {
           if (src) sources.push(src);
         });
+        Object.values(plantDefs).forEach((def) => {
+          if (def && def.sprite) sources.push(def.sprite);
+        });
         coinDropTable.forEach((coin) => {
           if (coin && coin.src) sources.push(coin.src);
         });
@@ -774,6 +751,7 @@ const canvas = document.getElementById("gameCanvas");
         mapCycle: 0,
         phase: "persiapan",
         coins: 60,
+        lootTotals: { koin: 0, berlian: 0, ruby: 0 },
         materials: 4,
         trophies: 0,
         seeds: { mage: 0, slow: 0, heal: 0, buff: 0 },
@@ -854,6 +832,10 @@ const canvas = document.getElementById("gameCanvas");
         return Math.min(Math.max(value, min), max);
       }
 
+      function formatNumber(value) {
+        return Math.round(value).toLocaleString("id-ID");
+      }
+
       function startPlayerState(state, duration, attackType) {
         if (game.player.state === "dead" && state !== "dead") return;
         game.player.state = state;
@@ -918,7 +900,7 @@ const canvas = document.getElementById("gameCanvas");
       }
 
       function applyEnemyDamage(enemy, damage) {
-        if (enemy.state === "dead") return;
+        if (enemy.state === "dead" || enemy.state === "eaten") return;
         enemy.hp -= damage;
         if (enemy.hp <= 0) {
           enemy.hp = 0;
@@ -1115,12 +1097,94 @@ const canvas = document.getElementById("gameCanvas");
         }
       }
 
+      function updateShopOverlay() {
+        if (!shopUi) return;
+        const armor = armorOptions[selectedArmorIndex];
+        if (shopUi.armorName) {
+          shopUi.armorName.textContent = armor ? armor.name : "Armor";
+        }
+        if (shopUi.armorPrice) {
+          if (armor && armor.price > 0) {
+            shopUi.armorPrice.textContent = `Harga: ${armor.price} koin`;
+          } else {
+            shopUi.armorPrice.textContent = "Harga: Gratis";
+          }
+        }
+        if (shopUi.armorPreview) {
+          if (armor && armor.src) {
+            shopUi.armorPreview.src = armor.src;
+            shopUi.armorPreview.alt = armor.name;
+            shopUi.armorPreview.style.opacity = "1";
+          } else {
+            shopUi.armorPreview.removeAttribute("src");
+            shopUi.armorPreview.alt = "Tanpa armor";
+            shopUi.armorPreview.style.opacity = "0";
+          }
+        }
+        if (shopUi.armorAction && armor) {
+          const owned = Boolean(game.armorOwned[armor.id]);
+          const equipped = game.player && game.player.armorIndex === selectedArmorIndex;
+          if (!owned) {
+            shopUi.armorAction.textContent = "Beli";
+            shopUi.armorAction.disabled = game.coins < armor.price;
+          } else if (equipped) {
+            shopUi.armorAction.textContent = "Terpasang";
+            shopUi.armorAction.disabled = true;
+          } else {
+            shopUi.armorAction.textContent = "Pakai";
+            shopUi.armorAction.disabled = false;
+          }
+        }
+
+        const weapon = weapons[selectedWeaponIndex];
+        if (shopUi.weaponName) {
+          shopUi.weaponName.textContent = weapon ? weapon.name : "Senjata";
+        }
+        if (shopUi.weaponPrice) {
+          if (weapon) {
+            const price = weapon.price || 0;
+            shopUi.weaponPrice.textContent =
+              price > 0 ? `Harga: ${price} koin` : "Harga: Gratis";
+          } else {
+            shopUi.weaponPrice.textContent = "Harga: -";
+          }
+        }
+        if (shopUi.weaponPreview) {
+          if (weapon && weapon.icon) {
+            shopUi.weaponPreview.src = weapon.icon;
+            shopUi.weaponPreview.alt = weapon.name;
+            shopUi.weaponPreview.style.opacity = "1";
+          } else {
+            shopUi.weaponPreview.removeAttribute("src");
+            shopUi.weaponPreview.alt = "Senjata";
+            shopUi.weaponPreview.style.opacity = "0";
+          }
+        }
+        if (shopUi.weaponAction && weapon) {
+          const owned = Boolean(game.weaponOwned[weapon.id]);
+          const equipped =
+            weapons[game.player.weaponIndex] &&
+            weapons[game.player.weaponIndex].id === weapon.id;
+          if (!owned) {
+            shopUi.weaponAction.textContent = "Beli";
+            shopUi.weaponAction.disabled = game.coins < (weapon.price || 0);
+          } else if (equipped) {
+            shopUi.weaponAction.textContent = "Terpasang";
+            shopUi.weaponAction.disabled = true;
+          } else {
+            shopUi.weaponAction.textContent = "Pakai";
+            shopUi.weaponAction.disabled = false;
+          }
+        }
+      }
+
       function setWeaponIndex(index) {
         const total = weapons.length;
         if (!total) return;
         const next = ((index % total) + total) % total;
         selectedWeaponIndex = next;
         updateWeaponUI();
+        updateShopOverlay();
       }
 
       function selectPlant(type) {
@@ -1134,13 +1198,13 @@ const canvas = document.getElementById("gameCanvas");
         if (!seedSlots.length) return;
         if (ui.seedBarTitle) {
           if (game.phase === "persiapan") {
-            ui.seedBarTitle.textContent = "Koleksi Benih";
+            ui.seedBarTitle.textContent = "Tas";
           } else if (game.phase === "pertahanan") {
-            ui.seedBarTitle.textContent = "Koleksi Benih (Pertahanan)";
+            ui.seedBarTitle.textContent = "Tas (Pertahanan)";
           } else if (game.phase === "eksplorasi") {
-            ui.seedBarTitle.textContent = "Koleksi Benih (Eksplorasi)";
+            ui.seedBarTitle.textContent = "Tas (Eksplorasi)";
           } else {
-            ui.seedBarTitle.textContent = "Koleksi Benih (Peningkatan)";
+            ui.seedBarTitle.textContent = "Tas (Peningkatan)";
           }
         }
         seedSlots.forEach((slot) => {
@@ -1251,8 +1315,11 @@ const canvas = document.getElementById("gameCanvas");
           if (dx * dx + dy * dy <= 18 * 18) {
             if (drop.type === "coin") {
               game.coins += drop.value;
-              if (drop.id === "berlian") {
-                log("Berlian ditemukan!");
+              if (game.lootTotals && drop.id) {
+                game.lootTotals[drop.id] = (game.lootTotals[drop.id] || 0) + 1;
+              }
+              if (drop.id === "ruby") {
+                log("Ruby ditemukan!");
               }
             } else if (drop.type === "seed") {
               game.seeds[drop.seedType] += 1;
@@ -1267,17 +1334,20 @@ const canvas = document.getElementById("gameCanvas");
         game.drops = game.drops.filter((drop) => !drop.collected);
       }
 
-      function setupCoinMenu() {
+      function renderCoinMenu() {
         if (!ui.coinMenu) return;
         ui.coinMenu.innerHTML = "";
         coinAssets.forEach((coin) => {
+          const totalCount = game.lootTotals ? game.lootTotals[coin.id] || 0 : 0;
+          const totalValue = totalCount * (coin.unitValue || 0);
+          const info = `Total: ${formatNumber(totalValue)}`;
           const item = document.createElement("div");
           item.className = "coin-item";
           item.innerHTML = `
             <img src="${coin.src}" alt="${coin.name}" />
             <div>
               <div class="coin-name">${coin.name}</div>
-              <div class="coin-asset">${coin.asset}</div>
+              <div class="coin-asset">${info}</div>
             </div>
           `;
           ui.coinMenu.appendChild(item);
@@ -1289,6 +1359,9 @@ const canvas = document.getElementById("gameCanvas");
         const shouldShow = typeof force === "boolean"
           ? force
           : !ui.coinMenu.classList.contains("show");
+        if (shouldShow) {
+          renderCoinMenu();
+        }
         ui.coinMenu.classList.toggle("show", shouldShow);
         ui.coinSlot.setAttribute("aria-expanded", shouldShow ? "true" : "false");
       }
@@ -1336,6 +1409,7 @@ const canvas = document.getElementById("gameCanvas");
         const next = ((index % total) + total) % total;
         selectedArmorIndex = next;
         updateArmorUI();
+        updateShopOverlay();
       }
 
       function equipArmor(index) {
@@ -1566,13 +1640,19 @@ const canvas = document.getElementById("gameCanvas");
         game.seeds[selectedPlant] -= def.cost.benih;
         game.coins -= coinCost;
 
+        const shield = def.shield || 0;
         game.plants.push({
           row,
           col,
           type: selectedPlant,
           hp: def.hp,
           maxHp: def.hp,
+          shield,
+          maxShield: shield,
           cooldown: 0,
+          burstCount: 0,
+          eatingTarget: null,
+          eatingUntil: 0,
         });
 
         log(`Menanam ${def.name} di baris ${row + 1}.`);
@@ -1872,6 +1952,10 @@ const canvas = document.getElementById("gameCanvas");
         ui.overlayTitle.textContent = "";
         ui.overlayBody.innerHTML = "";
         ui.overlayActions.innerHTML = "";
+        shopUi = null;
+        if (ui.shopSlot) {
+          ui.shopSlot.setAttribute("aria-expanded", "false");
+        }
         game.paused = !hasStarted;
       }
 
@@ -1968,8 +2052,10 @@ const canvas = document.getElementById("gameCanvas");
 
         updateArmorUI();
         updateWeaponUI();
+        updateShopOverlay();
         renderPlantList();
         updateSeedBar();
+        renderCoinMenu();
         syncSettingsControls();
       }
 
@@ -1979,7 +2065,7 @@ const canvas = document.getElementById("gameCanvas");
         let target = null;
         let closest = Infinity;
         game.enemies.forEach((enemy) => {
-          if (enemy.state === "dead") return;
+          if (enemy.state === "dead" || enemy.state === "eaten") return;
           if (enemy.col !== plant.col) return;
           const dist = Math.abs(enemy.y - center.y);
           if (dist <= def.range && dist < closest) {
@@ -1990,72 +2076,76 @@ const canvas = document.getElementById("gameCanvas");
         return target;
       }
 
-      function getBuffMultiplier(plant) {
-        let bonus = 0;
-        game.plants.forEach((item) => {
-          if (item.type !== "buff") return;
-          const distRow = Math.abs(item.row - plant.row);
-          const distCol = Math.abs(item.col - plant.col);
-          if (distRow <= 1 && distCol <= 1) {
-            bonus += plantDefs.buff.buff;
-          }
-        });
-        return 1 + bonus;
+      function startPlantEating(plant, enemy, now, duration) {
+        plant.eatingTarget = enemy;
+        plant.eatingUntil = now + duration;
+        enemy.state = "eaten";
+        enemy.eatenBy = plant;
+        enemy.eatenUntil = plant.eatingUntil;
+        enemy.moving = false;
+        enemy.attackCooldown = enemy.attackRate;
       }
 
       function updatePlants(dt) {
         const now = performance.now() / 1000;
         game.plants.forEach((plant) => {
-          plant.cooldown -= dt;
           const def = plantDefs[plant.type];
+          if (!def) return;
+          plant.cooldown = Math.max(plant.cooldown - dt, 0);
 
           if (plant.type === "heal") {
-            if (plant.cooldown <= 0) {
-              const healAmount =
-                def.heal * (1 + game.bonuses.plantDamage + game.weather.healBonus);
-              game.plants.forEach((target) => {
-                const distRow = Math.abs(target.row - plant.row);
-                const distCol = Math.abs(target.col - plant.col);
-                if (distRow <= 1 && distCol <= 1) {
-                  target.hp = Math.min(target.maxHp, target.hp + healAmount);
-                }
-              });
-              game.core.hp = Math.min(game.core.maxHp, game.core.hp + healAmount * 0.3);
-              plant.cooldown = def.cooldown;
+            const target = plant.eatingTarget;
+            if (target) {
+              if (target.state !== "eaten") {
+                plant.eatingTarget = null;
+                return;
+              }
+              if (now >= plant.eatingUntil) {
+                target.hp = 0;
+                startEnemyDeath(target);
+                plant.eatingTarget = null;
+              }
               return;
             }
+            const enemy = findEnemyInRange(plant);
+            if (!enemy) return;
+            startPlantEating(plant, enemy, now, def.eatDuration || 3);
+            return;
           }
 
           if (plant.type === "buff") return;
 
-          if (plant.cooldown <= 0) {
-            const enemy = findEnemyInRange(plant);
-            if (!enemy) return;
-            const multiplier =
-              (1 + game.bonuses.plantDamage) * getBuffMultiplier(plant);
-            const damage = def.damage * multiplier;
-            applyEnemyDamage(enemy, damage);
-            if (plant.type === "slow" && enemy.state !== "dead") {
-              enemy.slowUntil = Math.max(
-                enemy.slowUntil,
-                now + def.slowDuration
-              );
-              enemy.slowFactor = Math.max(
-                0.2,
-                1 - def.slow - game.bonuses.slowBonus
-              );
+          if (plant.cooldown > 0) return;
+          const enemy = findEnemyInRange(plant);
+          if (!enemy) {
+            if (plant.type === "mage") {
+              plant.burstCount = 0;
             }
-            const center = cellCenter(plant.row, plant.col);
-            game.effects.push({
-              x1: center.x,
-              y1: center.y,
-              x2: enemy.x,
-              y2: enemy.y,
-              ttl: 0.15,
-              color: def.color,
-            });
-            plant.cooldown = def.cooldown;
+            return;
           }
+          const damage = def.damage * (1 + game.bonuses.plantDamage);
+          applyEnemyDamage(enemy, damage);
+          const center = cellCenter(plant.row, plant.col);
+          game.effects.push({
+            x1: center.x,
+            y1: center.y,
+            x2: enemy.x,
+            y2: enemy.y,
+            ttl: 0.15,
+            color: def.color,
+          });
+
+          if (plant.type === "mage") {
+            const burstTotal = def.burstShots || 1;
+            plant.burstCount = (plant.burstCount || 0) + 1;
+            if (plant.burstCount >= burstTotal) {
+              plant.burstCount = 0;
+            }
+            plant.cooldown = def.burstDelay || 0;
+            return;
+          }
+
+          plant.cooldown = def.cooldown || 0;
         });
       }
 
@@ -2077,6 +2167,19 @@ const canvas = document.getElementById("gameCanvas");
         return null;
       }
 
+      function applyPlantDamage(plant, damage) {
+        let remaining = damage;
+        if (plant.shield && plant.shield > 0) {
+          const shieldDamage = Math.min(plant.shield, remaining);
+          plant.shield = Math.max(0, plant.shield - shieldDamage);
+          remaining -= shieldDamage;
+        }
+        if (remaining > 0) {
+          plant.hp = Math.max(0, plant.hp - remaining);
+        }
+        return plant.hp <= 0;
+      }
+
       function updateEnemies(dt) {
         const now = performance.now() / 1000;
         const player = game.player;
@@ -2085,14 +2188,34 @@ const canvas = document.getElementById("gameCanvas");
             enemy.stateTime += dt;
             return;
           }
+          if (enemy.state === "eaten") {
+            const eater = enemy.eatenBy;
+            const eaterAlive = eater && game.plants.includes(eater);
+            if (!eaterAlive) {
+              enemy.state = "run";
+              enemy.eatenBy = null;
+              enemy.eatenUntil = 0;
+              enemy.attackCooldown = enemy.attackRate;
+              return;
+            }
+            const center = cellCenter(eater.row, eater.col);
+            enemy.x = center.x;
+            enemy.y = center.y;
+            enemy.moving = false;
+            if (now >= enemy.eatenUntil) {
+              enemy.hp = 0;
+              startEnemyDeath(enemy);
+            }
+            return;
+          }
           const targetPlant = findBlockingPlant(enemy);
           if (targetPlant) {
             enemy.moving = false;
             enemy.attackCooldown -= dt;
             if (enemy.attackCooldown <= 0) {
-              targetPlant.hp -= enemy.damage;
+              const destroyed = applyPlantDamage(targetPlant, enemy.damage);
               enemy.attackCooldown = enemy.attackRate;
-              if (targetPlant.hp <= 0) {
+              if (destroyed) {
                 game.plants = game.plants.filter((plant) => plant !== targetPlant);
                 log("Satu tanaman hancur.");
               }
@@ -2163,7 +2286,7 @@ const canvas = document.getElementById("gameCanvas");
             shot.rotation = Math.atan2(shot.vy, shot.vx);
           }
           for (const enemy of game.enemies) {
-            if (enemy.state === "dead") continue;
+            if (enemy.state === "dead" || enemy.state === "eaten") continue;
             const dx = enemy.x - shot.x;
             const dy = enemy.y - shot.y;
             if (dx * dx + dy * dy <= shot.radius * shot.radius * 9) {
@@ -2445,12 +2568,6 @@ const canvas = document.getElementById("gameCanvas");
         const ratio = clamp(game.core.hp / game.core.maxHp, 0, 1);
 
         ctx.save();
-        ctx.strokeStyle = "rgba(255, 230, 160, 0.55)";
-        ctx.lineWidth = 2;
-        ctx.beginPath();
-        ctx.arc(marker.x, marker.y + 12, 20, 0, Math.PI * 2);
-        ctx.stroke();
-
         ctx.fillStyle = "rgba(20, 16, 10, 0.6)";
         ctx.fillRect(
           Math.round(marker.x - barWidth / 2 - 3),
@@ -2468,11 +2585,6 @@ const canvas = document.getElementById("gameCanvas");
           "#2f3b2f",
           "#131018"
         );
-        ctx.fillStyle = "#fff1c9";
-        ctx.font = "bold 12px Baloo 2";
-        ctx.textAlign = "center";
-        ctx.textBaseline = "bottom";
-        ctx.fillText("INTI", marker.x, marker.y + 18);
         ctx.restore();
       }
 
@@ -2735,24 +2847,67 @@ const canvas = document.getElementById("gameCanvas");
         ctx.restore();
       }
 
+      function drawPlantSprite(plant, x, y) {
+        const def = plantDefs[plant.type];
+        const img = def && def.sprite ? getSpriteImage(def.sprite) : null;
+        if (!img) {
+          drawPlantGlyph(plant.type, x, y, def ? def.color : "#6b4e2e");
+          return;
+        }
+        const scale = def.spriteScale || 0.6;
+        const targetSize = Math.max(12, Math.round(cellSize * scale));
+        let drawW = targetSize;
+        let drawH = targetSize;
+        if (img.width && img.height) {
+          const aspect = img.width / img.height;
+          if (aspect >= 1) {
+            drawW = targetSize;
+            drawH = Math.max(1, Math.round(targetSize / aspect));
+          } else {
+            drawH = targetSize;
+            drawW = Math.max(1, Math.round(targetSize * aspect));
+          }
+        }
+        const offsetY = def.spriteOffsetY || 0;
+        ctx.drawImage(
+          img,
+          Math.round(x - drawW / 2),
+          Math.round(y - drawH / 2 + offsetY),
+          drawW,
+          drawH
+        );
+      }
+
       function drawPlants() {
         game.plants.forEach((plant) => {
           const def = plantDefs[plant.type];
           const center = cellCenter(plant.row, plant.col);
-          drawPlantGlyph(plant.type, center.x, center.y, def.color);
+          drawPlantSprite(plant, center.x, center.y);
 
-          if (plant.type === "buff") {
-            ctx.strokeStyle = "rgba(244,162,97,0.6)";
-            ctx.beginPath();
-            ctx.arc(center.x, center.y, 26, 0, Math.PI * 2);
-            ctx.stroke();
+          const barWidth = 36;
+          const barHeight = 4;
+          const barX = center.x - barWidth / 2;
+          const hpRatio = clamp(plant.hp / plant.maxHp, 0, 1);
+          const maxShield = plant.maxShield || 0;
+          const shieldRatio = maxShield
+            ? clamp((plant.shield || 0) / maxShield, 0, 1)
+            : 0;
+
+          if (maxShield > 0) {
+            ctx.fillStyle = "rgba(0,0,0,0.25)";
+            ctx.fillRect(barX, center.y - 30, barWidth, barHeight);
+            ctx.fillStyle = "#60a5fa";
+            ctx.fillRect(barX, center.y - 30, barWidth * shieldRatio, barHeight);
+            ctx.fillStyle = "rgba(0,0,0,0.25)";
+            ctx.fillRect(barX, center.y - 24, barWidth, barHeight);
+            ctx.fillStyle = "#a7f3d0";
+            ctx.fillRect(barX, center.y - 24, barWidth * hpRatio, barHeight);
+          } else {
+            ctx.fillStyle = "rgba(0,0,0,0.2)";
+            ctx.fillRect(barX, center.y - 26, barWidth, barHeight);
+            ctx.fillStyle = "#a7f3d0";
+            ctx.fillRect(barX, center.y - 26, barWidth * hpRatio, barHeight);
           }
-
-          const ratio = clamp(plant.hp / plant.maxHp, 0, 1);
-          ctx.fillStyle = "rgba(0,0,0,0.2)";
-          ctx.fillRect(center.x - 18, center.y - 26, 36, 4);
-          ctx.fillStyle = "#a7f3d0";
-          ctx.fillRect(center.x - 18, center.y - 26, 36 * ratio, 4);
         });
       }
 
@@ -2791,6 +2946,7 @@ const canvas = document.getElementById("gameCanvas");
         game.enemies.forEach((enemy) => {
           const sprite = getEnemySprite(enemy.type);
           const isDead = enemy.state === "dead";
+          const isEaten = enemy.state === "eaten";
           const moving = enemy.moving;
           const sheet = sprite
             ? isDead
@@ -2818,6 +2974,10 @@ const canvas = document.getElementById("gameCanvas");
           const frameH = sheet ? sheet.frameH : 32;
           const scale = sheet ? enemyBaseSize / frameH : 1.05;
 
+          if (isEaten) {
+            ctx.save();
+            ctx.globalAlpha = 0.6;
+          }
           ctx.fillStyle = "rgba(0, 0, 0, 0.22)";
           ctx.beginPath();
           ctx.ellipse(
@@ -2833,6 +2993,9 @@ const canvas = document.getElementById("gameCanvas");
 
           if (!drawSpriteFrame(img, frameIndex, enemy.x, enemy.y, frameW, frameH, scale, false)) {
             drawEnemyBody(enemy);
+          }
+          if (isEaten) {
+            ctx.restore();
           }
           if (enemy.state !== "dead") {
             const ratio = clamp(enemy.hp / enemy.maxHp, 0, 1);
@@ -3097,6 +3260,7 @@ const canvas = document.getElementById("gameCanvas");
         game.mapCycle = 0;
         game.phase = "persiapan";
         game.coins = 60;
+        game.lootTotals = { koin: 0, berlian: 0, ruby: 0 };
         game.materials = 4;
         game.trophies = 0;
         game.seeds = { mage: 0, slow: 0, heal: 0, buff: 0 };
@@ -3178,6 +3342,155 @@ const canvas = document.getElementById("gameCanvas");
         updateUI();
       }
 
+      function openTutorial() {
+        const body = `
+          <div class="tutorial-grid">
+            <div class="panel-section">
+              <h2>Cara Bermain</h2>
+              <div class="guide-list">
+                <div>1. Pilih benih lalu tanam di petak saat persiapan.</div>
+                <div>2. Tekan Enter untuk mulai pertahanan.</div>
+                <div>3. Serang musuh dan lindungi inti desa.</div>
+                <div>4. Setelah gelombang, eksplor dan tingkatkan desa.</div>
+              </div>
+            </div>
+            <div class="panel-section">
+              <h2>Kontrol</h2>
+              <div class="control-list">
+                <div>WASD / Panah: Gerak petani (kursor tanam mengikuti posisi)</div>
+                <div>F: Tanam / panen di kursor</div>
+                <div>Klik kiri: Serang musuh</div>
+                <div>Roda mouse: Ganti senjata</div>
+                <div>Spasi: Menghindar singkat</div>
+                <div>Enter: Mulai pertahanan</div>
+                <div>E: Menu karakter</div>
+                <div>ESC: Jeda</div>
+              </div>
+            </div>
+          </div>
+        `;
+        showOverlay("Tutorial", body, [
+          { label: "Tutup", className: "secondary", onClick: hideOverlay },
+        ]);
+      }
+
+      function openShopMenu() {
+        if (shopUi) {
+          hideOverlay();
+          return;
+        }
+        if (ui.overlay.classList.contains("show")) {
+          hideOverlay();
+        }
+        toggleCoinMenu(false);
+        const body = `
+          <div class="shop-grid">
+            <div class="panel-section shop-section">
+              <h2>Toko Armor</h2>
+              <div class="armor-picker">
+                <div class="armor-preview">
+                  <img id="shopArmorPreview" alt="Preview armor" />
+                </div>
+                <div>
+                  <div id="shopArmorName" class="armor-name">Armor</div>
+                  <div id="shopArmorPrice" class="armor-price">Harga: -</div>
+                </div>
+              </div>
+              <div class="button-row">
+                <button id="shopArmorPrev" type="button" class="secondary">Sebelumnya</button>
+                <button id="shopArmorNext" type="button">Berikutnya</button>
+                <button id="shopArmorAction" type="button" class="secondary">Beli</button>
+              </div>
+            </div>
+            <div class="panel-section shop-section">
+              <h2>Toko Senjata</h2>
+              <div class="armor-picker">
+                <div class="armor-preview">
+                  <img id="shopWeaponPreview" alt="Preview senjata" />
+                </div>
+                <div>
+                  <div id="shopWeaponName" class="armor-name">Senjata</div>
+                  <div id="shopWeaponPrice" class="armor-price">Harga: -</div>
+                </div>
+              </div>
+              <div class="button-row">
+                <button id="shopWeaponPrev" type="button" class="secondary">Sebelumnya</button>
+                <button id="shopWeaponNext" type="button">Berikutnya</button>
+                <button id="shopWeaponAction" type="button" class="secondary">Beli</button>
+              </div>
+            </div>
+          </div>
+        `;
+        showOverlay("Toko Peralatan", body, [
+          { label: "Tutup", className: "secondary", onClick: hideOverlay },
+        ]);
+
+        shopUi = {
+          armorName: document.getElementById("shopArmorName"),
+          armorPreview: document.getElementById("shopArmorPreview"),
+          armorPrice: document.getElementById("shopArmorPrice"),
+          armorPrev: document.getElementById("shopArmorPrev"),
+          armorNext: document.getElementById("shopArmorNext"),
+          armorAction: document.getElementById("shopArmorAction"),
+          weaponName: document.getElementById("shopWeaponName"),
+          weaponPreview: document.getElementById("shopWeaponPreview"),
+          weaponPrice: document.getElementById("shopWeaponPrice"),
+          weaponPrev: document.getElementById("shopWeaponPrev"),
+          weaponNext: document.getElementById("shopWeaponNext"),
+          weaponAction: document.getElementById("shopWeaponAction"),
+        };
+
+        if (ui.shopSlot) {
+          ui.shopSlot.setAttribute("aria-expanded", "true");
+        }
+
+        if (shopUi.armorPrev) {
+          shopUi.armorPrev.addEventListener("click", () => {
+            setArmorIndex(selectedArmorIndex - 1);
+          });
+        }
+        if (shopUi.armorNext) {
+          shopUi.armorNext.addEventListener("click", () => {
+            setArmorIndex(selectedArmorIndex + 1);
+          });
+        }
+        if (shopUi.armorAction) {
+          shopUi.armorAction.addEventListener("click", () => {
+            const armor = armorOptions[selectedArmorIndex];
+            if (!armor) return;
+            if (game.armorOwned[armor.id]) {
+              equipArmor(selectedArmorIndex);
+            } else {
+              buyArmor(selectedArmorIndex);
+            }
+            updateShopOverlay();
+          });
+        }
+        if (shopUi.weaponPrev) {
+          shopUi.weaponPrev.addEventListener("click", () => {
+            setWeaponIndex(selectedWeaponIndex - 1);
+          });
+        }
+        if (shopUi.weaponNext) {
+          shopUi.weaponNext.addEventListener("click", () => {
+            setWeaponIndex(selectedWeaponIndex + 1);
+          });
+        }
+        if (shopUi.weaponAction) {
+          shopUi.weaponAction.addEventListener("click", () => {
+            const weapon = weapons[selectedWeaponIndex];
+            if (!weapon) return;
+            if (game.weaponOwned[weapon.id]) {
+              equipWeapon(selectedWeaponIndex);
+            } else {
+              buyWeapon(selectedWeaponIndex);
+            }
+            updateShopOverlay();
+          });
+        }
+        updateShopOverlay();
+      }
+
       function openCharacterMenu() {
         const body = `
           <p>Level ${game.level} | XP ${game.xp} | Poin kemampuan ${game.skillPoints}</p>
@@ -3225,6 +3538,9 @@ const canvas = document.getElementById("gameCanvas");
       ui.resetGame.addEventListener("click", resetGame);
       if (startButton) {
         startButton.addEventListener("click", startGame);
+      }
+      if (tutorialButton) {
+        tutorialButton.addEventListener("click", openTutorial);
       }
       if (ui.mapSelect) {
         ui.mapSelect.addEventListener("change", () => {
@@ -3310,6 +3626,12 @@ const canvas = document.getElementById("gameCanvas");
         ui.coinSlot.addEventListener("click", (event) => {
           event.stopPropagation();
           toggleCoinMenu();
+        });
+      }
+      if (ui.shopSlot) {
+        ui.shopSlot.addEventListener("click", (event) => {
+          event.stopPropagation();
+          openShopMenu();
         });
       }
       if (ui.coinMenu) {
@@ -3473,6 +3795,6 @@ const canvas = document.getElementById("gameCanvas");
 
       loadSprites();
       setupSettingsControls();
-      setupCoinMenu();
+      renderCoinMenu();
       resetGame();
       requestAnimationFrame(loop);

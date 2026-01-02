@@ -22,9 +22,9 @@
         margin: 0;
         font-family: "Baloo 2", "Trebuchet MS", sans-serif;
         color: var(--ink);
-        background: radial-gradient(circle at 10% 12%, rgba(255, 255, 255, 0.7), transparent 32%),
-          radial-gradient(circle at 82% 18%, rgba(255, 255, 255, 0.6), transparent 30%),
-          linear-gradient(180deg, var(--sky) 0%, #cfe9ff 42%, #f6e4c6 100%);
+        background: radial-gradient(circle at 12% 14%, rgba(255, 230, 200, 0.12), transparent 35%),
+          radial-gradient(circle at 86% 18%, rgba(255, 210, 170, 0.1), transparent 32%),
+          linear-gradient(180deg, #341700 0%, #2b1309 45%, #230f08 100%);
         min-height: 100vh;
         padding: 32px 24px 48px;
         background-attachment: fixed;
@@ -42,7 +42,7 @@
       body::before {
         width: 420px;
         height: 240px;
-        background: radial-gradient(circle, rgba(255, 255, 255, 0.9), transparent 70%);
+        background: radial-gradient(circle, rgba(255, 220, 190, 0.2), transparent 70%);
         top: -90px;
         right: 10%;
       }
@@ -50,7 +50,7 @@
       body::after {
         width: 360px;
         height: 220px;
-        background: radial-gradient(circle, rgba(255, 255, 255, 0.75), transparent 70%);
+        background: radial-gradient(circle, rgba(255, 200, 160, 0.18), transparent 70%);
         bottom: -90px;
         left: 8%;
       }
@@ -209,7 +209,7 @@
 
       .seed-bar {
         width: 100%;
-        --slot-size: clamp(40px, 7vmin, 54px);
+        --slot-size: clamp(80px, 12vmin, 100px);
         padding: 10px 12px 12px;
         border-radius: 12px;
         background: linear-gradient(180deg, #f6c37d 0%, #e09a52 100%);
@@ -232,8 +232,8 @@
       .seed-grid {
         display: flex;
         align-items: center;
-        gap: 6px;
-        padding: 6px;
+        gap: 4px;
+        padding: 4px;
         border-radius: 10px;
         background: linear-gradient(180deg, #f4b66c 0%, #e69c52 100%);
         border: 2px solid rgba(123, 74, 36, 0.55);
@@ -266,9 +266,10 @@
       }
 
       .seed-slot img {
-        width: calc(var(--slot-size) * 0.5);
-        height: calc(var(--slot-size) * 0.5);
-        image-rendering: pixelated;
+        width: calc(var(--slot-size) * 0.68);
+        height: calc(var(--slot-size) * 0.68);
+        object-fit: contain;
+        image-rendering: auto;
       }
 
       .seed-count {
@@ -347,6 +348,52 @@
         height: 4px;
         background: rgba(91, 52, 22, 0.55);
         border-radius: 0 0 4px 4px;
+      }
+
+      .shop-slot {
+        background: linear-gradient(180deg, #ffe9bd 0%, #f0b469 100%);
+      }
+
+      .shop-slot[aria-expanded="true"] {
+        border-color: #2d78ff;
+        box-shadow: 0 6px 14px rgba(45, 120, 255, 0.2),
+          inset 0 2px 0 rgba(255, 255, 255, 0.6);
+      }
+
+      .cart-icon {
+        width: calc(var(--slot-size) * 0.5);
+        height: calc(var(--slot-size) * 0.3);
+        border-radius: 4px 4px 6px 6px;
+        border: 2px solid #5b3416;
+        background: linear-gradient(180deg, #ffe9bd 0%, #f2bc72 100%);
+        position: relative;
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.55);
+      }
+
+      .cart-icon::before {
+        content: "";
+        position: absolute;
+        top: -8px;
+        left: 2px;
+        width: 12px;
+        height: 8px;
+        border: 2px solid #5b3416;
+        border-bottom: none;
+        border-right: none;
+        border-radius: 6px 0 0 0;
+        background: linear-gradient(180deg, #ffeecf 0%, #f2c783 100%);
+      }
+
+      .cart-icon::after {
+        content: "";
+        position: absolute;
+        bottom: -7px;
+        left: 3px;
+        width: 6px;
+        height: 6px;
+        background: #5b3416;
+        border-radius: 50%;
+        box-shadow: calc(var(--slot-size) * 0.2) 0 0 #5b3416;
       }
 
       .coin-menu {
@@ -614,6 +661,7 @@
         display: grid;
         place-items: center;
         padding: 24px;
+        z-index: 40;
         opacity: 0;
         pointer-events: none;
         transition: opacity 0.3s ease;
@@ -646,6 +694,17 @@
         display: flex;
         flex-wrap: wrap;
         gap: 10px;
+      }
+
+      .tutorial-grid {
+        display: grid;
+        gap: 12px;
+      }
+
+      .shop-grid {
+        display: grid;
+        gap: 14px;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
       }
 
       .char-grid {
@@ -761,8 +820,8 @@
         display: grid;
         place-items: center;
         padding: 24px;
-        background: radial-gradient(circle at 20% 20%, rgba(255, 255, 255, 0.4), transparent 40%),
-          linear-gradient(180deg, #9fd7ff 0%, #cfe9ff 42%, #f6e4c6 100%);
+        background: radial-gradient(circle at 18% 20%, rgba(255, 220, 190, 0.12), transparent 42%),
+          linear-gradient(180deg, #341700 0%, #2b1309 45%, #230f08 100%);
         z-index: 30;
       }
 
@@ -793,6 +852,37 @@
         color: #4a2e18;
       }
 
+      .start-buttons {
+        display: grid;
+        gap: 12px;
+        justify-items: center;
+        margin-top: 6px;
+      }
+
+      .pixel-button {
+        font-family: "Changa One", "Trebuchet MS", sans-serif;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+        border-radius: 12px;
+        border: 3px solid #6b3e1c;
+        padding: 12px 26px;
+        background: linear-gradient(180deg, #f6d6a7 0%, #e7a965 55%, #d48743 100%);
+        color: #5b3416;
+        box-shadow: 0 6px 0 #8e5527, 0 14px 22px rgba(90, 50, 20, 0.35),
+          inset 0 2px 0 rgba(255, 255, 255, 0.6);
+        width: min(240px, 70%);
+      }
+
+      .pixel-button.secondary {
+        background: linear-gradient(180deg, #f3e0b7 0%, #dfb67b 60%, #c78c4b 100%);
+      }
+
+      .pixel-button:active {
+        transform: translateY(3px);
+        box-shadow: 0 3px 0 #8e5527, 0 8px 14px rgba(90, 50, 20, 0.35),
+          inset 0 2px 0 rgba(255, 255, 255, 0.6);
+      }
+
       .start-eyebrow {
         display: inline-block;
         margin: 0;
@@ -806,7 +896,6 @@
         border: 1px solid rgba(120, 75, 32, 0.4);
       }
 
-      .start-card button {
-        padding: 10px 26px;
+      .start-card .pixel-button {
         font-weight: 700;
       }
