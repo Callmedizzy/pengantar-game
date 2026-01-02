@@ -126,7 +126,7 @@ const canvas = document.getElementById("gameCanvas");
           damage: 7,
           range: 220,
           burstShots: 3,
-          burstDelay: 2,
+          burstDelay: 1.5,
           hp: 48,
           color: "#3a7bd5",
           sprite: "assets/Tumbuhan/Kipli 3.png",
@@ -292,14 +292,15 @@ const canvas = document.getElementById("gameCanvas");
           damage: 10,
           cooldown: 0.55,
           speed: 640,
-          icon: "assets/senjata/panah.png",
+          icon: "assets/senjata/Busur.png",
           price: 10,
           holdScale: 0.65,
           holdDistance: 14,
           holdOffsetY: 4,
-          projectileSrc: "assets/senjata/panah.png",
+          projectileSrc: "assets/senjata/Busur.png",
           projectileSize: 20,
           spawnOffset: 18,
+          projectileHidden: true,
           attackType: "pierce",
         },
       ];
@@ -468,7 +469,7 @@ const canvas = document.getElementById("gameCanvas");
         },
       ];
 
-      const maxWavesPerMap = 5;
+      const maxWavesPerMap = 10;
       const maxSelectableLevel = 10;
 
       const spriteSheets = {
@@ -961,6 +962,7 @@ const canvas = document.getElementById("gameCanvas");
           radius: Math.max(8, Math.round((weapon.projectileSize || 18) * 0.45)),
           spriteSrc: weapon.projectileSrc || weapon.icon,
           size: weapon.projectileSize || 18,
+          hidden: Boolean(weapon.projectileHidden),
           rotation: angle,
           hit: false,
         });
@@ -1821,8 +1823,15 @@ const canvas = document.getElementById("gameCanvas");
         updateUI();
       }
 
+      function canAdvanceToNextWave() {
+        return (
+          game.phase === "upgrade" ||
+          (game.phase === "eksplorasi" && game.explorationDone)
+        );
+      }
+
       function nextDay() {
-        if (game.phase !== "upgrade") return;
+        if (!canAdvanceToNextWave()) return;
         const completedMap = game.waveInMap >= maxWavesPerMap;
         if (completedMap) {
           game.waveInMap = 1;
@@ -1885,7 +1894,7 @@ const canvas = document.getElementById("gameCanvas");
         }
 
         game.explorationDone = true;
-        log("Eksplorasi selesai. Lanjut ke peningkatan.");
+        log("Eksplorasi selesai. Lanjut ke peningkatan atau gelombang berikutnya.");
         updateUI();
       }
 
@@ -2193,9 +2202,14 @@ const canvas = document.getElementById("gameCanvas");
 
         ui.startDefense.disabled = game.phase !== "persiapan";
         ui.toUpgrade.disabled = !(game.phase === "eksplorasi" && game.explorationDone);
-        ui.nextDay.disabled = game.phase !== "upgrade";
+        const canAdvance = canAdvanceToNextWave();
+        ui.nextDay.disabled = !canAdvance;
+        ui.nextDay.classList.toggle("hidden", !canAdvance);
 
-        ui.explorePanel.classList.toggle("hidden", game.phase !== "eksplorasi");
+        ui.explorePanel.classList.toggle(
+          "hidden",
+          game.phase !== "eksplorasi" || game.explorationDone
+        );
         ui.upgradePanel.classList.toggle("hidden", game.phase !== "upgrade");
 
         if (game.phase === "persiapan") {
@@ -2204,8 +2218,9 @@ const canvas = document.getElementById("gameCanvas");
         } else if (game.phase === "pertahanan") {
           ui.phaseDesc.textContent = "Pertahankan Inti Desa dari serangan monster.";
         } else if (game.phase === "eksplorasi") {
-          ui.phaseDesc.textContent =
-            "Jelajahi area untuk mencari benih, material, dan relik.";
+          ui.phaseDesc.textContent = game.explorationDone
+            ? "Eksplorasi selesai. Pilih peningkatan atau lanjut gelombang berikutnya."
+            : "Jelajahi area untuk mencari benih, material, dan relik.";
         } else if (game.phase === "upgrade") {
           ui.phaseDesc.textContent = "Tingkatkan desa, senjata, dan tanaman.";
         }
@@ -2286,14 +2301,22 @@ const canvas = document.getElementById("gameCanvas");
           const damage = def.damage * (1 + game.bonuses.plantDamage);
           applyEnemyDamage(enemy, damage);
           const center = cellCenter(plant.row, plant.col);
-          game.effects.push({
+          const effect = {
             x1: center.x,
             y1: center.y,
             x2: enemy.x,
             y2: enemy.y,
             ttl: 0.15,
+            life: 0.15,
             color: def.color,
-          });
+          };
+          if (plant.type === "slow") {
+            effect.ttl = 0.08;
+            effect.life = 0.08;
+            effect.dash = [4, 6];
+            effect.width = 2;
+          }
+          game.effects.push(effect);
 
           if (plant.type === "mage") {
             const burstTotal = def.burstShots || 1;
@@ -3311,6 +3334,7 @@ const canvas = document.getElementById("gameCanvas");
 
       function drawProjectiles() {
         game.projectiles.forEach((shot) => {
+          if (shot.hidden) return;
           if (shot.spriteSrc) {
             const img = getSpriteImage(shot.spriteSrc);
             if (img) {
@@ -3356,15 +3380,20 @@ const canvas = document.getElementById("gameCanvas");
             ctx.restore();
             return;
           }
+          const life = effect.life || 0.15;
+          ctx.save();
           ctx.strokeStyle = effect.color;
-          ctx.globalAlpha = clamp(effect.ttl / 0.15, 0, 1);
-          ctx.lineWidth = 2;
+          ctx.globalAlpha = clamp(effect.ttl / life, 0, 1);
+          ctx.lineWidth = effect.width || 2;
+          ctx.lineCap = "round";
+          if (effect.dash) {
+            ctx.setLineDash(effect.dash);
+          }
           ctx.beginPath();
           ctx.moveTo(effect.x1, effect.y1);
           ctx.lineTo(effect.x2, effect.y2);
           ctx.stroke();
-          ctx.globalAlpha = 1;
-          ctx.lineWidth = 1;
+          ctx.restore();
         });
       }
 

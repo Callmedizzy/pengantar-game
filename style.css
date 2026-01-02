@@ -231,6 +231,55 @@
         z-index: 6;
       }
 
+      .map-actions {
+        position: absolute;
+        right: 14px;
+        bottom: 14px;
+        display: grid;
+        gap: 8px;
+        align-items: end;
+        z-index: 6;
+      }
+
+      .map-explore {
+        padding: 8px;
+        border-radius: 12px;
+        background: rgba(255, 245, 223, 0.92);
+        border: 2px solid rgba(110, 68, 36, 0.7);
+        box-shadow: 0 10px 18px rgba(84, 48, 24, 0.28);
+        display: grid;
+        gap: 6px;
+        min-width: 150px;
+      }
+
+      .map-explore-title {
+        font-family: "Changa One", "Trebuchet MS", sans-serif;
+        font-size: 0.7rem;
+        letter-spacing: 1px;
+        text-transform: uppercase;
+        color: #5b3416;
+      }
+
+      .map-explore-actions {
+        display: grid;
+        gap: 6px;
+      }
+
+      .map-explore-actions button {
+        padding: 6px 8px;
+        font-size: 0.65rem;
+        border-radius: 10px;
+      }
+
+      .map-action-button {
+        min-width: 150px;
+        padding: 8px 12px;
+        font-size: 0.7rem;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        line-height: 1.1;
+      }
+
       .quick-button {
         width: 48px;
         min-height: 48px;
@@ -286,33 +335,18 @@
       }
 
       .tas-panel {
-        position: absolute;
-        top: 0;
-        right: calc(100% + 12px);
-        padding: 8px;
-        border-radius: 16px;
-        background: rgba(255, 255, 255, 0.78);
-        border: 2px solid rgba(123, 74, 36, 0.35);
-        box-shadow: 0 18px 28px rgba(30, 20, 10, 0.25);
-        opacity: 0;
-        pointer-events: none;
-        transform: translateX(8px) scale(0.98);
-        transition: opacity 0.2s ease, transform 0.2s ease;
+        width: 100%;
+        display: none;
+        justify-content: center;
+        padding: 10px 0 0;
       }
 
       .tas-panel.show {
-        opacity: 1;
-        pointer-events: auto;
-        transform: translateX(0) scale(1);
+        display: flex;
       }
 
       .tas-panel .seed-bar {
-        width: min(320px, 90vw);
-        --slot-size: clamp(56px, 9vmin, 70px);
-      }
-
-      .tas-panel .seed-bar-title {
-        font-size: 0.75rem;
+        width: min(100%, 760px);
       }
 
       .tas-panel .seed-grid {
@@ -320,12 +354,6 @@
         grid-template-columns: repeat(auto-fit, minmax(var(--slot-size), 1fr));
         gap: 6px;
         overflow: visible;
-      }
-
-      .tas-panel .coin-menu {
-        right: 0;
-        top: calc(100% + 8px);
-        bottom: auto;
       }
 
       .seed-bar-title {
@@ -932,7 +960,7 @@
       }
 
       body.game-only .tas-panel .seed-bar {
-        width: min(320px, 90vw);
+        width: min(90vmin, 760px);
         --slot-size: clamp(56px, 9vmin, 70px);
       }
 
@@ -958,19 +986,38 @@
           right: 12px;
         }
 
+        .map-actions {
+          right: 10px;
+          bottom: 12px;
+        }
+
+        .map-explore {
+          min-width: 130px;
+          padding: 6px;
+        }
+
+        .map-explore-title {
+          font-size: 0.62rem;
+        }
+
+        .map-explore-actions button {
+          font-size: 0.6rem;
+          padding: 5px 7px;
+        }
+
+        .map-action-button {
+          min-width: 130px;
+          font-size: 0.65rem;
+          padding: 7px 10px;
+        }
+
         .quick-button {
           width: 48px;
           min-height: 48px;
         }
 
         .tas-panel {
-          top: calc(100% + 12px);
-          right: 0;
-          transform: translateY(-6px) scale(0.98);
-        }
-
-        .tas-panel.show {
-          transform: translateY(0) scale(1);
+          padding-top: 8px;
         }
       }
 

@@ -36,7 +36,7 @@
           </p>
         </div>
         <div class="meta">
-          <div class="chip">Gelombang <span id="waveValue">1/5</span></div>
+          <div class="chip">Gelombang <span id="waveValue">1/10</span></div>
           <div class="chip">Peta <span id="mapValue">Normal</span></div>
           <div class="chip">Trofi <span id="trophyValue">0</span></div>
           <div class="chip">Level <span id="levelValue">1</span></div>
@@ -86,66 +86,41 @@
                 <img class="quick-icon-img" src="assets/Logo/Tas.png" alt="" aria-hidden="true" />
                 <span class="quick-label">Tas</span>
               </button>
-              <div class="tas-panel" id="tasPanel" aria-hidden="true">
-                <div class="seed-bar" id="seedBar">
-                  <div class="seed-bar-title" id="seedBarTitle">Tas</div>
-                  <div class="seed-grid">
-                    <button class="seed-slot" type="button" data-seed="mage">
-                      <img src="assets/Tumbuhan/Kipli 3.png" alt="Benih Kipli 3" />
-                      <span class="seed-count" data-seed-count="mage">0</span>
-                    </button>
-                    <button class="seed-slot" type="button" data-seed="slow">
-                      <img src="assets/Tumbuhan/Kucing.png" alt="Benih Kucing" />
-                      <span class="seed-count" data-seed-count="slow">0</span>
-                    </button>
-                    <button class="seed-slot" type="button" data-seed="heal">
-                      <img src="assets/Tumbuhan/Pemakan.png" alt="Benih Pemakan" />
-                      <span class="seed-count" data-seed-count="heal">0</span>
-                    </button>
-                    <button class="seed-slot" type="button" data-seed="buff">
-                      <img src="assets/Tumbuhan/Perisai.png" alt="Benih Perisai" />
-                      <span class="seed-count" data-seed-count="buff">0</span>
-                    </button>
-                    <button
-                      class="seed-slot coin-slot"
-                      id="coinSlot"
-                      type="button"
-                      aria-haspopup="true"
-                      aria-expanded="false"
-                    >
-                      <img
-                        class="slot-icon"
-                        src="assets/Logo/Uang.png"
-                        alt=""
-                        aria-hidden="true"
-                      />
-                    </button>
-                    <button class="seed-slot bag-slot" type="button" disabled>
-                      <img class="slot-icon" src="assets/Logo/Tas.png" alt="" aria-hidden="true" />
-                    </button>
-                    <button
-                      class="seed-slot shop-slot"
-                      id="shopSlot"
-                      type="button"
-                      aria-label="Toko peralatan"
-                      aria-haspopup="dialog"
-                      aria-expanded="false"
-                    >
-                      <img
-                        class="slot-icon"
-                        src="assets/Logo/Toko.png"
-                        alt=""
-                        aria-hidden="true"
-                      />
-                    </button>
-                  </div>
-                  <div
-                    class="coin-menu"
-                    id="coinMenu"
-                    role="menu"
-                    aria-label="Daftar koin"
-                  ></div>
+            </div>
+            <div class="map-actions">
+              <div class="map-explore hidden" id="explorePanel">
+                <div class="map-explore-title">Eksplorasi</div>
+                <div class="map-explore-actions">
+                  <button id="exploreForest" type="button">Hutan</button>
+                  <button id="exploreCave" type="button">Gua</button>
+                  <button id="exploreSwamp" type="button">Rawa</button>
                 </div>
+              </div>
+              <button id="nextDay" type="button" class="secondary map-action-button hidden">
+                Gelombang Berikutnya
+              </button>
+            </div>
+          </div>
+          <div class="tas-panel" id="tasPanel" aria-hidden="true">
+            <div class="seed-bar" id="seedBar">
+              <div class="seed-bar-title" id="seedBarTitle">Tas</div>
+              <div class="seed-grid">
+                <button class="seed-slot" type="button" data-seed="mage">
+                  <img src="assets/Tumbuhan/Kipli 3.png" alt="Benih Kipli 3" />
+                  <span class="seed-count" data-seed-count="mage">0</span>
+                </button>
+                <button class="seed-slot" type="button" data-seed="slow">
+                  <img src="assets/Tumbuhan/Kucing.png" alt="Benih Kucing" />
+                  <span class="seed-count" data-seed-count="slow">0</span>
+                </button>
+                <button class="seed-slot" type="button" data-seed="heal">
+                  <img src="assets/Tumbuhan/Pemakan.png" alt="Benih Pemakan" />
+                  <span class="seed-count" data-seed-count="heal">0</span>
+                </button>
+                <button class="seed-slot" type="button" data-seed="buff">
+                  <img src="assets/Tumbuhan/Perisai.png" alt="Benih Perisai" />
+                  <span class="seed-count" data-seed-count="buff">0</span>
+                </button>
               </div>
             </div>
           </div>
@@ -185,9 +160,6 @@
               <button id="toUpgrade" type="button" class="secondary">
                 Lanjut Peningkatan
               </button>
-              <button id="nextDay" type="button" class="secondary">
-                Gelombang Berikutnya
-              </button>
               <button id="resetGame" type="button" class="danger">
                 Ulang Game
               </button>
@@ -215,16 +187,6 @@
               <div>Benih Perisai: <span id="seedBuffValue">0</span></div>
               <div>HP Inti: <span id="coreValue">0</span></div>
               <div>Nyawa: <span id="lifeValue">0</span></div>
-            </div>
-          </div>
-
-          <div class="panel-section hidden" id="explorePanel">
-            <h2>Eksplorasi</h2>
-            <p>Pilih area untuk mencari benih langka dan relik.</p>
-            <div class="button-row">
-              <button id="exploreForest" type="button">Hutan</button>
-              <button id="exploreCave" type="button">Gua</button>
-              <button id="exploreSwamp" type="button">Rawa</button>
             </div>
           </div>
 
@@ -271,4 +233,3 @@
     <script src="script.js"></script>
   </body>
 </html>
-
