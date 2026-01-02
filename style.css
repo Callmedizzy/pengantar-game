@@ -762,6 +762,7 @@
         grid-template-columns: minmax(320px, auto) minmax(220px, 320px);
         gap: 20px;
         justify-items: center;
+        justify-content: center;
         align-items: start;
         padding: 18px;
       }
