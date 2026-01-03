@@ -21,16 +21,12 @@ const canvas = document.getElementById("gameCanvas");
         seedBuffValue: document.getElementById("seedBuffValue"),
         coreValue: document.getElementById("coreValue"),
         lifeValue: document.getElementById("lifeValue"),
-        explorePanel: document.getElementById("explorePanel"),
         upgradePanel: document.getElementById("upgradePanel"),
         startDefense: document.getElementById("startDefense"),
         toUpgrade: document.getElementById("toUpgrade"),
         nextDay: document.getElementById("nextDay"),
         resetGame: document.getElementById("resetGame"),
         toggleHarvest: document.getElementById("toggleHarvest"),
-        exploreForest: document.getElementById("exploreForest"),
-        exploreCave: document.getElementById("exploreCave"),
-        exploreSwamp: document.getElementById("exploreSwamp"),
         upgradeCore: document.getElementById("upgradeCore"),
         upgradePlants: document.getElementById("upgradePlants"),
         upgradePlayer: document.getElementById("upgradePlayer"),
@@ -108,14 +104,12 @@ const canvas = document.getElementById("gameCanvas");
       const phaseLabels = {
         persiapan: "Persiapan",
         pertahanan: "Pertahanan",
-        eksplorasi: "Eksplorasi",
         upgrade: "Peningkatan",
       };
 
       const sceneTitles = {
         persiapan: "Hidup & Persiapan",
         pertahanan: "Pengepungan",
-        eksplorasi: "Eksplorasi & Buru Material",
         upgrade: "Peningkatan Desa",
       };
 
@@ -163,13 +157,6 @@ const canvas = document.getElementById("gameCanvas");
           sprite: "assets/Tumbuhan/Perisai.png",
           spriteScale: 0.62,
         },
-      };
-
-      const seedIcons = {
-        mage: "assets/Tumbuhan/Kipli 3.png",
-        slow: "assets/Tumbuhan/Kucing.png",
-        heal: "assets/Tumbuhan/Pemakan.png",
-        buff: "assets/Tumbuhan/Perisai.png",
       };
 
       const enemyDefs = {
@@ -375,30 +362,6 @@ const canvas = document.getElementById("gameCanvas");
         },
       ];
 
-      const coinDropTable = [
-        {
-          id: "koin",
-          name: "Koin",
-          src: "assets/Mata Uang/Koin.png",
-          value: 1,
-          weight: 0.75,
-        },
-        {
-          id: "berlian",
-          name: "Berlian",
-          src: "assets/Mata Uang/Berlian.png",
-          value: 4,
-          weight: 0.249,
-        },
-        {
-          id: "ruby",
-          name: "Ruby",
-          src: "assets/Mata Uang/Ruby.png",
-          value: 15,
-          weight: 0.001,
-        },
-      ];
-
       const relicPool = [
         { name: "Relik Penjaga", effect: { coreMax: 15 } },
         { name: "Relik Bara", effect: { plantDamage: 0.1 } },
@@ -436,6 +399,7 @@ const canvas = document.getElementById("gameCanvas");
           ground: groundTiles.normal,
           overlay: "none",
           props: { bush: bushTile, rock: rockTile },
+          unlockLevel: 1,
           weather: { name: "Normal", desc: "Cuaca bersahabat", coinsBonus: 0, enemySpeed: 0, healBonus: 0 },
         },
         {
@@ -446,6 +410,7 @@ const canvas = document.getElementById("gameCanvas");
           ground: groundTiles.normal,
           overlay: "rain",
           props: { bush: bushTile, rock: rockTile },
+          unlockLevel: 2,
           weather: { name: "Hujan", desc: "Tanaman lebih segar", coinsBonus: 0, enemySpeed: -0.05, healBonus: 0.15 },
         },
         {
@@ -456,6 +421,7 @@ const canvas = document.getElementById("gameCanvas");
           ground: groundTiles.normal,
           overlay: "night",
           props: { bush: bushTile, rock: rockTile },
+          unlockLevel: 3,
           weather: { name: "Malam", desc: "Gelap dan mencekam", coinsBonus: 0, enemySpeed: 0.08, healBonus: 0 },
         },
         {
@@ -466,12 +432,17 @@ const canvas = document.getElementById("gameCanvas");
           ground: groundTiles.snow,
           overlay: "snow",
           props: { bush: snowBushTile, rock: rockTile },
+          unlockLevel: 4,
           weather: { name: "Salju", desc: "Dingin memperlambat musuh", coinsBonus: 0, enemySpeed: -0.08, healBonus: 0.05 },
         },
       ];
 
-      const maxWavesPerMap = 10;
-      const maxSelectableLevel = 10;
+      const maxSelectableLevel = 5;
+
+      function getMaxWavesForLevel(level) {
+        if (level <= 3) return 3;
+        return Math.min(level, maxSelectableLevel);
+      }
 
       const spriteSheets = {
         player: {
@@ -695,13 +666,10 @@ const canvas = document.getElementById("gameCanvas");
           if (weapon && weapon.icon) sources.push(weapon.icon);
           if (weapon && weapon.projectileSrc) sources.push(weapon.projectileSrc);
         });
-        Object.values(seedIcons).forEach((src) => {
-          if (src) sources.push(src);
-        });
         Object.values(plantDefs).forEach((def) => {
           if (def && def.sprite) sources.push(def.sprite);
         });
-        coinDropTable.forEach((coin) => {
+        coinAssets.forEach((coin) => {
           if (coin && coin.src) sources.push(coin.src);
         });
         Object.values(tileSheets).forEach((item) => {
@@ -767,7 +735,7 @@ const canvas = document.getElementById("gameCanvas");
         xp: 0,
         level: 1,
         skillPoints: 0,
-        skills: { farming: 0, exploration: 0, combat: 0 },
+        skills: { farming: 0, combat: 0 },
         bonuses: {
           plantDamage: 0,
           playerDamage: 0,
@@ -785,14 +753,10 @@ const canvas = document.getElementById("gameCanvas");
         enemies: [],
         projectiles: [],
         effects: [],
-        drops: [],
-        seedDropTimer: 0,
-        seedDropsRemaining: 0,
         waveTimer: 0,
         spawnQueue: [],
         kills: 0,
         paused: false,
-        explorationDone: false,
         player: {
           x: gridStartX + 20,
           y: boardOffsetY + boardHeight / 2,
@@ -1209,8 +1173,6 @@ const canvas = document.getElementById("gameCanvas");
             ui.seedBarTitle.textContent = "Tas";
           } else if (game.phase === "pertahanan") {
             ui.seedBarTitle.textContent = "Tas (Pertahanan)";
-          } else if (game.phase === "eksplorasi") {
-            ui.seedBarTitle.textContent = "Tas (Eksplorasi)";
           } else {
             ui.seedBarTitle.textContent = "Tas (Peningkatan)";
           }
@@ -1224,122 +1186,6 @@ const canvas = document.getElementById("gameCanvas");
           slot.classList.toggle("active", selectedPlant === key);
           slot.classList.toggle("empty", count <= 0);
         });
-      }
-
-      function pickWeighted(items) {
-        const total = items.reduce((acc, item) => acc + item.weight, 0);
-        let roll = Math.random() * total;
-        for (const item of items) {
-          roll -= item.weight;
-          if (roll <= 0) return item;
-        }
-        return items[0];
-      }
-
-      function getDropBounds() {
-        return {
-          minX: gridStartX + 12,
-          maxX: gridEndX - 12,
-          minY: boardOffsetY + 12,
-          maxY: boardOffsetY + boardHeight - 16,
-          groundY: boardOffsetY + boardHeight - 12,
-        };
-      }
-
-      function spawnCoinDrop() {
-        const bounds = getDropBounds();
-        const coin = pickWeighted(coinDropTable);
-        game.drops.push({
-          type: "coin",
-          id: coin.id,
-          name: coin.name,
-          value: coin.value,
-          sprite: coin.src,
-          x: bounds.minX + Math.random() * (bounds.maxX - bounds.minX),
-          y: bounds.minY + Math.random() * (bounds.maxY - bounds.minY),
-          vy: 0,
-          size: 20,
-        });
-      }
-
-      function spawnSeedDrop() {
-        const bounds = getDropBounds();
-        const types = Object.keys(seedIcons);
-        const seedType = types[randRange(0, types.length - 1)];
-        game.drops.push({
-          type: "seed",
-          seedType,
-          sprite: seedIcons[seedType],
-          x: bounds.minX + Math.random() * (bounds.maxX - bounds.minX),
-          y: bounds.minY - 24,
-          vy: 40 + Math.random() * 40,
-          size: 18,
-        });
-      }
-
-      function clearExplorationDrops() {
-        game.drops = [];
-        game.seedDropTimer = 0;
-        game.seedDropsRemaining = 0;
-      }
-
-      function startExplorationDrops() {
-        clearExplorationDrops();
-        const baseCoins = randRange(8, 12);
-        const bonusCoins = Math.floor(game.skills.exploration * 2);
-        const totalCoins = baseCoins + bonusCoins;
-        for (let i = 0; i < totalCoins; i += 1) {
-          spawnCoinDrop();
-        }
-        const baseSeeds = randRange(5, 8);
-        const bonusSeeds = Math.floor(game.skills.exploration * 1.2);
-        game.seedDropsRemaining = baseSeeds + bonusSeeds;
-        game.seedDropTimer = 0.6;
-      }
-
-      function updateDrops(dt) {
-        if (game.phase !== "eksplorasi") return;
-        if (game.seedDropsRemaining > 0) {
-          game.seedDropTimer -= dt;
-          if (game.seedDropTimer <= 0) {
-            spawnSeedDrop();
-            game.seedDropsRemaining -= 1;
-            game.seedDropTimer = 0.6 + Math.random() * 0.8;
-          }
-        }
-        const bounds = getDropBounds();
-        let pickedSomething = false;
-        game.drops.forEach((drop) => {
-          if (drop.vy) {
-            drop.vy += 140 * dt;
-            drop.y += drop.vy * dt;
-            if (drop.y >= bounds.groundY) {
-              drop.y = bounds.groundY;
-              drop.vy = 0;
-            }
-          }
-          const dx = drop.x - game.player.x;
-          const dy = drop.y - game.player.y;
-          if (dx * dx + dy * dy <= 18 * 18) {
-            if (drop.type === "coin") {
-              game.coins += drop.value;
-              if (game.lootTotals && drop.id) {
-                game.lootTotals[drop.id] = (game.lootTotals[drop.id] || 0) + 1;
-              }
-              if (drop.id === "ruby") {
-                log("Ruby ditemukan!");
-              }
-            } else if (drop.type === "seed") {
-              game.seeds[drop.seedType] += 1;
-            }
-            drop.collected = true;
-            pickedSomething = true;
-          }
-        });
-        if (pickedSomething) {
-          updateUI();
-        }
-        game.drops = game.drops.filter((drop) => !drop.collected);
       }
 
       function renderCoinMenu() {
@@ -1592,6 +1438,10 @@ const canvas = document.getElementById("gameCanvas");
         if (ui.mapSelect) {
           ui.mapSelect.value = String(game.mapIndex);
           ui.mapSelect.disabled = disableSelects;
+          ui.mapSelect.querySelectorAll("option").forEach((option, index) => {
+            const unlockLevel = mapSequence[index]?.unlockLevel || 1;
+            option.disabled = game.level < unlockLevel;
+          });
         }
         if (ui.levelSelect) {
           ui.levelSelect.value = String(game.level);
@@ -1608,6 +1458,11 @@ const canvas = document.getElementById("gameCanvas");
           return false;
         }
         const safeIndex = clamp(nextIndex, 0, mapSequence.length - 1);
+        const unlockLevel = mapSequence[safeIndex]?.unlockLevel || 1;
+        if (game.level < unlockLevel) {
+          log(`Peta terkunci. Capai level ${unlockLevel} untuk membuka.`);
+          return false;
+        }
         if (safeIndex === game.mapIndex) return true;
         game.mapIndex = safeIndex;
         applyMapTheme();
@@ -1622,11 +1477,19 @@ const canvas = document.getElementById("gameCanvas");
         }
         const safeLevel = clamp(nextLevel, 1, maxSelectableLevel);
         if (safeLevel === game.level) return true;
-        const spent =
-          game.skills.farming + game.skills.exploration + game.skills.combat;
+        const spent = game.skills.farming + game.skills.combat;
         game.level = safeLevel;
         game.xp = 0;
         game.skillPoints = Math.max(0, safeLevel - 1 - spent);
+        const maxWaves = getMaxWavesForLevel(game.level);
+        if (game.waveInMap > maxWaves) {
+          game.waveInMap = maxWaves;
+        }
+        const currentUnlock = mapSequence[game.mapIndex]?.unlockLevel || 1;
+        if (game.level < currentUnlock) {
+          game.mapIndex = 0;
+          applyMapTheme();
+        }
         updateUI();
         return true;
       }
@@ -1712,12 +1575,14 @@ const canvas = document.getElementById("gameCanvas");
         }
         if (game.phase !== "persiapan") return;
         game.phase = "pertahanan";
-        clearExplorationDrops();
+        const maxWaves = getMaxWavesForLevel(game.level);
+        if (game.waveInMap > maxWaves) {
+          game.waveInMap = maxWaves;
+        }
         game.waveTimer = 0;
         game.spawnQueue = createWave(game.waveInMap);
         game.kills = 0;
         game.lives = 3;
-        game.explorationDone = false;
         game.player.x = gridStartX + 20;
         game.player.y = boardOffsetY + boardHeight / 2;
         game.player.state = "normal";
@@ -1730,9 +1595,14 @@ const canvas = document.getElementById("gameCanvas");
       }
 
       function createWave(wave) {
-        const difficulty = wave <= 3 ? "mudah" : wave === 4 ? "normal" : "sulit";
-        let total = 8 + wave * 2;
-        let timeGap = 1.15;
+        const level = game.level;
+        const difficultyScore = wave + level;
+        const difficulty =
+          difficultyScore >= 8 ? "sulit" : difficultyScore >= 6 ? "normal" : "mudah";
+        const levelScale = 1 + (level - 1) * 0.18;
+        const waveScale = 1 + (wave - 1) * 0.08;
+        let total = Math.round((8 + wave * 2) * levelScale * waveScale);
+        let timeGap = Math.max(0.55, 1.15 - (level - 1) * 0.06 - (wave - 1) * 0.03);
         let pool = [
           { type: "orc", weight: 0.3 },
           { type: "skeleton", weight: 0.3 },
@@ -1740,8 +1610,8 @@ const canvas = document.getElementById("gameCanvas");
           { type: "skeletonRogue", weight: 0.2 },
         ];
         if (difficulty === "normal") {
-          total = 12;
-          timeGap = 1.0;
+          total = Math.round(12 * levelScale * waveScale);
+          timeGap = Math.max(0.5, 1.0 - (level - 1) * 0.06 - (wave - 1) * 0.03);
           pool = [
             { type: "orc", weight: 0.2 },
             { type: "skeleton", weight: 0.2 },
@@ -1751,8 +1621,8 @@ const canvas = document.getElementById("gameCanvas");
             { type: "skeletonMage", weight: 0.1 },
           ];
         } else if (difficulty === "sulit") {
-          total = 15;
-          timeGap = 0.9;
+          total = Math.round(15 * levelScale * waveScale);
+          timeGap = Math.max(0.45, 0.9 - (level - 1) * 0.05 - (wave - 1) * 0.03);
           pool = [
             { type: "orc", weight: 0.15 },
             { type: "skeleton", weight: 0.15 },
@@ -1762,6 +1632,7 @@ const canvas = document.getElementById("gameCanvas");
             { type: "skeletonWarrior", weight: 0.2 },
           ];
         }
+        total = Math.max(6, total);
 
         const pickType = () => {
           const roll = Math.random();
@@ -1784,8 +1655,7 @@ const canvas = document.getElementById("gameCanvas");
 
       function endDefense() {
         if (game.phase !== "pertahanan") return;
-        game.phase = "eksplorasi";
-        startExplorationDrops();
+        game.phase = "upgrade";
         const harvest = Math.round(
           game.plants.length * (2 + game.skills.farming * 0.4)
         );
@@ -1796,8 +1666,8 @@ const canvas = document.getElementById("gameCanvas");
         game.trophies += 1;
         grantDailySeeds();
         gainXp(10 + game.waveInMap * 4 + game.kills);
-        log("Pertahanan sukses. Waktunya eksplorasi.");
-        if (game.waveInMap >= maxWavesPerMap) {
+        log("Pertahanan sukses. Waktunya peningkatan.");
+        if (game.waveInMap >= getMaxWavesForLevel(game.level)) {
           log("Gelombang terakhir di peta ini selesai. Lanjutkan ke peta berikutnya.");
         }
         updateUI();
@@ -1807,33 +1677,31 @@ const canvas = document.getElementById("gameCanvas");
         game.xp += amount;
         const threshold = game.level * 18;
         if (game.xp >= threshold) {
-          game.xp -= threshold;
-          game.level += 1;
-          game.skillPoints += 1;
-          log("Level naik! Kamu mendapat 1 poin kemampuan.");
+          if (game.level < maxSelectableLevel) {
+            game.xp -= threshold;
+            game.level = Math.min(maxSelectableLevel, game.level + 1);
+            game.skillPoints += 1;
+            log("Level naik! Kamu mendapat 1 poin kemampuan.");
+          } else {
+            game.xp = threshold;
+          }
         }
       }
 
       function openUpgradePhase() {
-        if (game.phase !== "eksplorasi" || !game.explorationDone) {
-          return;
-        }
+        if (game.phase === "pertahanan") return;
         game.phase = "upgrade";
-        clearExplorationDrops();
         log("Masuk fase peningkatan dan bertani.");
         updateUI();
       }
 
       function canAdvanceToNextWave() {
-        return (
-          game.phase === "upgrade" ||
-          (game.phase === "eksplorasi" && game.explorationDone)
-        );
+        return game.phase === "upgrade";
       }
 
       function nextDay() {
         if (!canAdvanceToNextWave()) return;
-        const completedMap = game.waveInMap >= maxWavesPerMap;
+        const completedMap = game.waveInMap >= getMaxWavesForLevel(game.level);
         if (completedMap) {
           game.waveInMap = 1;
           game.mapIndex += 1;
@@ -1848,54 +1716,8 @@ const canvas = document.getElementById("gameCanvas");
           game.waveInMap += 1;
         }
         game.phase = "persiapan";
-        clearExplorationDrops();
         game.player.hp = game.player.maxHp;
         log(`Persiapan gelombang ${game.waveInMap}. Siapkan pertahanan baru.`);
-        updateUI();
-      }
-
-      function exploreArea(area) {
-        if (game.phase !== "eksplorasi" || game.explorationDone) return;
-        const mult = 1 + game.skills.exploration * 0.08;
-        let loot = {
-          coins: randRange(8, 14),
-          materials: randRange(1, 3),
-          seeds: { mage: 0, slow: 0, heal: 0, buff: 0 },
-          relicChance: 0.2,
-        };
-
-        if (area === "hutan") {
-          loot.coins = randRange(12, 20);
-          loot.seeds.mage = 1;
-          loot.seeds.slow = 1;
-          loot.relicChance = 0.15;
-        } else if (area === "gua") {
-          loot.coins = randRange(8, 14);
-          loot.materials = randRange(2, 4);
-          loot.seeds.slow = 1;
-          loot.relicChance = 0.25;
-        } else {
-          loot.coins = randRange(6, 12);
-          loot.seeds.heal = 1;
-          loot.seeds.buff = 1;
-          loot.relicChance = 0.22;
-        }
-
-        const coinBonus = 1 + game.bonuses.coinsBonus + game.weather.coinsBonus;
-        game.coins += Math.round(loot.coins * mult * coinBonus);
-        game.materials += Math.round(loot.materials * mult);
-        Object.keys(loot.seeds).forEach((type) => {
-          game.seeds[type] += loot.seeds[type];
-        });
-
-        if (Math.random() < loot.relicChance) {
-          const relic = relicPool[randRange(0, relicPool.length - 1)];
-          applyRelic(relic);
-          log(`Menemukan ${relic.name}.`);
-        }
-
-        game.explorationDone = true;
-        log("Eksplorasi selesai. Lanjut ke peningkatan atau gelombang berikutnya.");
         updateUI();
       }
 
@@ -2001,6 +1823,19 @@ const canvas = document.getElementById("gameCanvas");
         game.paused = !hasStarted;
       }
 
+      function buildLevelWaveTemplate() {
+        const rows = [];
+        for (let level = 1; level <= maxSelectableLevel; level += 1) {
+          const maxWave = getMaxWavesForLevel(level);
+          const waves = [];
+          for (let wave = 1; wave <= maxWave; wave += 1) {
+            waves.push(wave);
+          }
+          rows.push(`<div class="map-level-row">Level ${level}: Wave ${waves.join(" ")}</div>`);
+        }
+        return rows.join("");
+      }
+
       function openMiniMap() {
         if (ui.overlay.classList.contains("show") && overlayContext === "minimap") {
           hideOverlay();
@@ -2008,10 +1843,34 @@ const canvas = document.getElementById("gameCanvas");
         }
         toggleInventoryPanel(false);
         const body = `
-          <div class="map-preview">
-            <div class="map-frame">
-              <img src="assets/Map/Semua Map.jpg" alt="Peta dunia" loading="lazy" />
+          <div class="map-browser">
+            <div class="map-grid">
+              ${mapSequence.map((map, index) => {
+                const unlockLevel = map.unlockLevel || 1;
+                const locked = game.level < unlockLevel;
+                const selected = game.mapIndex === index;
+                return `
+                  <button
+                    class="map-card${locked ? " locked" : ""}${selected ? " selected" : ""}"
+                    data-map-index="${index}"
+                    type="button"
+                    aria-disabled="${locked ? "true" : "false"}"
+                  >
+                    <div class="map-thumb">
+                      <img src="${map.background}" alt="Peta ${map.label}" loading="lazy" />
+                      ${locked ? `
+                        <div class="map-lock">
+                          <div class="lock-icon"></div>
+                          <div class="lock-text">Terkunci</div>
+                        </div>
+                      ` : ""}
+                    </div>
+                    <div class="map-label">${map.label}</div>
+                  </button>
+                `;
+              }).join("")}
             </div>
+            <div class="map-info" id="mapInfo"></div>
           </div>
         `;
         showOverlay(
@@ -2022,6 +1881,45 @@ const canvas = document.getElementById("gameCanvas");
         );
         setMiniMapButtonExpanded(true);
         setPauseButtonExpanded(false);
+
+        const infoEl = ui.overlayBody.querySelector("#mapInfo");
+        const mapButtons = Array.from(ui.overlayBody.querySelectorAll(".map-card"));
+        const templateHtml = buildLevelWaveTemplate();
+        const renderInfo = (mapIndex) => {
+          const map = mapSequence[mapIndex];
+          if (!map || !infoEl) return;
+          const unlockLevel = map.unlockLevel || 1;
+          const locked = game.level < unlockLevel;
+          infoEl.innerHTML = `
+            <div class="map-info-title">${map.label}</div>
+            <div class="map-info-sub">${map.weather.desc}</div>
+            ${locked ? `<div class="map-info-lock">Terkunci: butuh level ${unlockLevel}.</div>` : ""}
+            <div class="map-level-list">${templateHtml}</div>
+          `;
+        };
+
+        renderInfo(game.mapIndex);
+        mapButtons.forEach((button) => {
+          button.addEventListener("click", () => {
+            const index = Number.parseInt(button.dataset.mapIndex, 10);
+            renderInfo(index);
+            if (Number.isNaN(index)) return;
+            const map = mapSequence[index];
+            const unlockLevel = map?.unlockLevel || 1;
+            if (game.level < unlockLevel) {
+              log(`Peta terkunci. Capai level ${unlockLevel} untuk membuka.`);
+              return;
+            }
+            if (setMapIndex(index)) {
+              mapButtons.forEach((item) => {
+                item.classList.toggle(
+                  "selected",
+                  Number.parseInt(item.dataset.mapIndex, 10) === game.mapIndex
+                );
+              });
+            }
+          });
+        });
       }
 
       function openPauseMenu() {
@@ -2095,6 +1993,7 @@ const canvas = document.getElementById("gameCanvas");
             const option = document.createElement("option");
             option.value = String(index);
             option.textContent = map.label;
+            option.disabled = game.level < (map.unlockLevel || 1);
             menuMapSelect.appendChild(option);
           });
           menuMapSelect.value = String(game.mapIndex);
@@ -2184,7 +2083,7 @@ const canvas = document.getElementById("gameCanvas");
 
       function updateUI() {
         ensureEquippedWeaponOwned();
-        ui.waveValue.textContent = `${game.waveInMap}/${maxWavesPerMap}`;
+        ui.waveValue.textContent = `${game.waveInMap}/${getMaxWavesForLevel(game.level)}`;
         ui.mapValue.textContent = mapSequence[game.mapIndex].label;
         ui.trophyValue.textContent = game.trophies;
         ui.levelValue.textContent = game.level;
@@ -2202,15 +2101,10 @@ const canvas = document.getElementById("gameCanvas");
         ui.weaponText.textContent = `Senjata: ${weapons[game.player.weaponIndex].name}`;
 
         ui.startDefense.disabled = game.phase !== "persiapan";
-        ui.toUpgrade.disabled = !(game.phase === "eksplorasi" && game.explorationDone);
+        ui.toUpgrade.disabled = game.phase === "pertahanan" || game.phase === "upgrade";
         const canAdvance = canAdvanceToNextWave();
         ui.nextDay.disabled = !canAdvance;
         ui.nextDay.classList.toggle("hidden", !canAdvance);
-
-        ui.explorePanel.classList.toggle(
-          "hidden",
-          game.phase !== "eksplorasi" || game.explorationDone
-        );
         ui.upgradePanel.classList.toggle("hidden", game.phase !== "upgrade");
 
         if (game.phase === "persiapan") {
@@ -2218,10 +2112,6 @@ const canvas = document.getElementById("gameCanvas");
             "Siapkan tanaman dan formasi sebelum gelombang musuh datang.";
         } else if (game.phase === "pertahanan") {
           ui.phaseDesc.textContent = "Pertahankan Inti Desa dari serangan monster.";
-        } else if (game.phase === "eksplorasi") {
-          ui.phaseDesc.textContent = game.explorationDone
-            ? "Eksplorasi selesai. Pilih peningkatan atau lanjut gelombang berikutnya."
-            : "Jelajahi area untuk mencari benih, material, dan relik.";
         } else if (game.phase === "upgrade") {
           ui.phaseDesc.textContent = "Tingkatkan desa, senjata, dan tanaman.";
         }
@@ -2345,10 +2235,11 @@ const canvas = document.getElementById("gameCanvas");
       }
 
       function findBlockingPlant(enemy) {
+        const maxColOffset = game.level >= 5 ? 2 : game.level >= 3 ? 1 : 0;
         let target = null;
         let targetY = -Infinity;
         game.plants.forEach((plant) => {
-          if (plant.col !== enemy.col) return;
+          if (Math.abs(plant.col - enemy.col) > maxColOffset) return;
           const center = cellCenter(plant.row, plant.col);
           if (center.y < enemy.y && center.y > targetY) {
             target = plant;
@@ -2547,8 +2438,7 @@ const canvas = document.getElementById("gameCanvas");
         }
         const canMove =
           game.phase === "pertahanan" ||
-          game.phase === "persiapan" ||
-          game.phase === "eksplorasi";
+          game.phase === "persiapan";
         if (!canMove) {
           player.moving = false;
           player.animTime += dt * 0.35;
@@ -2624,19 +2514,30 @@ const canvas = document.getElementById("gameCanvas");
           }
         }
 
-        if (game.phase === "eksplorasi") {
-          updateDrops(dt);
-        }
-
         if (!game.paused && (game.core.hp <= 0 || game.lives <= 0)) {
           showGameOver();
         }
       }
 
+      function getEnemyScaling(level, wave) {
+        const levelBoost = Math.max(0, level - 1);
+        const waveBoost = Math.max(0, wave - 1);
+        return {
+          hp: 1 + levelBoost * 0.12 + waveBoost * 0.06,
+          damage: 1 + levelBoost * 0.1 + waveBoost * 0.05,
+          speed: 1 + levelBoost * 0.03 + waveBoost * 0.015,
+          attackRate: clamp(0.8 - levelBoost * 0.05 - waveBoost * 0.02, 0.35, 0.8),
+        };
+      }
+
       function spawnEnemy(type, col) {
         const def = enemyDefs[type];
         if (!def) return;
-        const speed = Math.max(6, def.speed * (1 + game.weather.enemySpeed));
+        const scaling = getEnemyScaling(game.level, game.waveInMap);
+        const speed = Math.max(
+          6,
+          def.speed * (1 + game.weather.enemySpeed) * scaling.speed
+        );
         const x = gridStartX + col * cellSize + cellSize / 2;
         const y = boardOffsetY + boardHeight + 24;
         game.enemies.push({
@@ -2644,15 +2545,15 @@ const canvas = document.getElementById("gameCanvas");
           col,
           x,
           y,
-          hp: def.hp,
-          maxHp: def.hp,
+          hp: Math.round(def.hp * scaling.hp),
+          maxHp: Math.round(def.hp * scaling.hp),
           speed,
-          damage: def.damage,
+          damage: Math.round(def.damage * scaling.damage),
           color: def.color,
           slowUntil: 0,
           slowFactor: 1,
-          attackRate: 0.8,
-          attackCooldown: 0.4,
+          attackRate: scaling.attackRate,
+          attackCooldown: scaling.attackRate * 0.5,
           reachedCore: false,
           counted: false,
           animOffset: Math.random() * 4,
@@ -3106,20 +3007,6 @@ const canvas = document.getElementById("gameCanvas");
         });
       }
 
-      function drawDrops() {
-        game.drops.forEach((drop) => {
-          const img = drop.sprite ? getSpriteImage(drop.sprite) : null;
-          const size = drop.size || 18;
-          if (img) {
-            ctx.drawImage(img, drop.x - size / 2, drop.y - size / 2, size, size);
-            return;
-          }
-          ctx.fillStyle = drop.type === "coin" ? "#f6c65b" : "#7dd3fc";
-          ctx.beginPath();
-          ctx.arc(drop.x, drop.y, size * 0.4, 0, Math.PI * 2);
-          ctx.fill();
-        });
-      }
 
       function drawEnemyBody(enemy) {
         const x = enemy.x;
@@ -3455,7 +3342,6 @@ const canvas = document.getElementById("gameCanvas");
         }
         drawCore();
         drawPlants();
-        drawDrops();
         drawEnemies();
         drawPlayer();
         drawProjectiles();
@@ -3495,7 +3381,7 @@ const canvas = document.getElementById("gameCanvas");
         game.xp = 0;
         game.level = 1;
         game.skillPoints = 0;
-        game.skills = { farming: 0, exploration: 0, combat: 0 };
+        game.skills = { farming: 0, combat: 0 };
         game.bonuses = {
           plantDamage: 0,
           playerDamage: 0,
@@ -3513,12 +3399,8 @@ const canvas = document.getElementById("gameCanvas");
         game.enemies = [];
         game.projectiles = [];
         game.effects = [];
-        game.drops = [];
-        game.seedDropTimer = 0;
-        game.seedDropsRemaining = 0;
         game.spawnQueue = [];
         game.waveTimer = 0;
-        game.explorationDone = false;
         game.kills = 0;
         game.paused = false;
         game.player = {
@@ -3726,10 +3608,6 @@ const canvas = document.getElementById("gameCanvas");
               <button data-skill="farming">Tambah</button>
             </div>
             <div class="char-item">
-              <span>Eksplorasi (hasil lebih besar)</span>
-              <button data-skill="exploration">Tambah</button>
-            </div>
-            <div class="char-item">
               <span>Pertempuran (serangan petani)</span>
               <button data-skill="combat">Tambah</button>
             </div>
@@ -3801,9 +3679,6 @@ const canvas = document.getElementById("gameCanvas");
         harvestMode = !harvestMode;
         ui.toggleHarvest.textContent = `Mode Panen: ${harvestMode ? "Nyala" : "Mati"}`;
       });
-      ui.exploreForest.addEventListener("click", () => exploreArea("hutan"));
-      ui.exploreCave.addEventListener("click", () => exploreArea("gua"));
-      ui.exploreSwamp.addEventListener("click", () => exploreArea("rawa"));
       ui.upgradeCore.addEventListener("click", upgradeCore);
       ui.upgradePlants.addEventListener("click", upgradePlants);
       ui.upgradePlayer.addEventListener("click", upgradePlayer);
