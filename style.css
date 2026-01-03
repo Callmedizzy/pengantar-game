@@ -1079,7 +1079,7 @@
       }
 
       body.game-only main.grid {
-        grid-template-columns: minmax(320px, auto) minmax(220px, 320px);
+        grid-template-columns: 1fr;
         gap: 20px;
         justify-items: center;
         justify-content: center;
