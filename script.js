@@ -41,12 +41,14 @@ const canvas = document.getElementById("gameCanvas");
         armorPrev: document.getElementById("armorPrev"),
         armorNext: document.getElementById("armorNext"),
         armorPrice: document.getElementById("armorPrice"),
+        armorEffect: document.getElementById("armorEffect"),
         armorAction: document.getElementById("armorAction"),
         weaponName: document.getElementById("weaponName"),
         weaponPreview: document.getElementById("weaponPreview"),
         weaponPrev: document.getElementById("weaponPrev"),
         weaponNext: document.getElementById("weaponNext"),
         weaponPrice: document.getElementById("weaponPrice"),
+        weaponDamage: document.getElementById("weaponDamage"),
         weaponAction: document.getElementById("weaponAction"),
         mapSelect: document.getElementById("mapSelect"),
         levelSelect: document.getElementById("levelSelect"),
@@ -59,6 +61,7 @@ const canvas = document.getElementById("gameCanvas");
         inventoryToggle: document.getElementById("inventoryToggle"),
         tasPanel: document.getElementById("tasPanel"),
         toUpgradeAction: document.getElementById("toUpgradeAction"),
+        startDefenseQuick: document.getElementById("startDefenseQuick"),
         miniMapButton: document.getElementById("miniMapButton"),
       };
 
@@ -173,12 +176,15 @@ const canvas = document.getElementById("gameCanvas");
         skeletonWarrior: { name: "Skeleton Warrior", hp: 52, speed: 20, damage: 18, color: "#c7b9a7" },
       };
 
+      const arrowIconSprite = "assets/Senjata/Panah.png";
+      const arrowProjectileSprite = "assets/Senjata/Busur.png";
+
       const weapons = [
         {
           id: "pedang",
           name: "Pedang",
           type: "melee",
-          damage: 10,
+          damage: 12,
           cooldown: 0.45,
           range: 58,
           arc: 1.4,
@@ -195,11 +201,11 @@ const canvas = document.getElementById("gameCanvas");
           id: "pedangPanjang",
           name: "Pedang Panjang",
           type: "melee",
-          damage: 12,
+          damage: 15,
           cooldown: 0.55,
           range: 70,
           arc: 1.2,
-          icon: "assets/senjata/pedang panjang.png",
+          icon: "assets/Senjata/Pedang Panjnag.png",
           price: 18,
           holdScale: 0.76,
           holdDistance: 18,
@@ -212,7 +218,7 @@ const canvas = document.getElementById("gameCanvas");
           id: "kapak",
           name: "Kapak",
           type: "melee",
-          damage: 14,
+          damage: 17,
           cooldown: 0.65,
           range: 54,
           arc: 1.2,
@@ -229,7 +235,7 @@ const canvas = document.getElementById("gameCanvas");
           id: "pisau",
           name: "Pisau",
           type: "melee",
-          damage: 7,
+          damage: 9,
           cooldown: 0.28,
           range: 42,
           arc: 1.6,
@@ -246,7 +252,7 @@ const canvas = document.getElementById("gameCanvas");
           id: "pecut",
           name: "Pecut",
           type: "melee",
-          damage: 9,
+          damage: 13,
           cooldown: 0.48,
           range: 88,
           arc: 0.9,
@@ -263,7 +269,7 @@ const canvas = document.getElementById("gameCanvas");
           id: "tombak",
           name: "Tombak",
           type: "throw",
-          damage: 16,
+          damage: 18,
           cooldown: 0.85,
           speed: 560,
           icon: "assets/senjata/tombak.png",
@@ -278,20 +284,19 @@ const canvas = document.getElementById("gameCanvas");
         },
         {
           id: "panah",
-          name: "Busur & Panah",
+          name: "Panah",
           type: "bow",
-          damage: 10,
+          damage: 20,
           cooldown: 0.55,
           speed: 640,
-          icon: "assets/senjata/Busur.png",
+          icon: arrowIconSprite,
           price: 10,
           holdScale: 0.65,
           holdDistance: 14,
           holdOffsetY: 4,
-          projectileSrc: "assets/senjata/Busur.png",
+          projectileSrc: arrowProjectileSprite,
           projectileSize: 20,
           spawnOffset: 18,
-          projectileHidden: true,
           attackType: "pierce",
         },
       ];
@@ -340,6 +345,15 @@ const canvas = document.getElementById("gameCanvas");
           src: "assets/armor/armour07leatherjerkin.png",
           price: 20,
         },
+      ];
+      const armorEffectPool = [
+        { id: "freeze", name: "Beku", type: "freeze", chance: 0.18, duration: 0.6 },
+        { id: "slow", name: "Lambat", type: "slow", chance: 0.26, duration: 1.4, slowFactor: 0.45 },
+        { id: "burn", name: "Terbakar", type: "burn", chance: 0.2, duration: 2.2, dotInterval: 0.45, dotDamage: 2 },
+        { id: "stun", name: "Stun", type: "stun", chance: 0.16, duration: 0.45 },
+        { id: "knock", name: "Dorong", type: "knockback", chance: 0.22, distance: 22 },
+        { id: "leech", name: "Sedot HP", type: "lifesteal", chance: 0.24, heal: 5 },
+        { id: "crit", name: "Tebasan Bonus", type: "bonusDamage", chance: 0.2, extraDamage: 4 },
       ];
       let selectedArmorIndex = 0;
       let selectedWeaponIndex = 0;
@@ -838,6 +852,42 @@ const canvas = document.getElementById("gameCanvas");
         return Math.round(value).toLocaleString("id-ID");
       }
 
+      function shuffleArray(items) {
+        const array = items.slice();
+        for (let i = array.length - 1; i > 0; i -= 1) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [array[i], array[j]] = [array[j], array[i]];
+        }
+        return array;
+      }
+
+      function assignArmorEffects() {
+        const pool = shuffleArray(armorEffectPool);
+        let poolIndex = 0;
+        armorOptions.forEach((armor) => {
+          if (!armor || armor.id === "none") {
+            if (armor) armor.effect = null;
+            return;
+          }
+          if (poolIndex >= pool.length) {
+            poolIndex = 0;
+          }
+          armor.effect = { ...pool[poolIndex] };
+          poolIndex += 1;
+        });
+      }
+
+      function getArmorEffectText(armor) {
+        if (!armor || !armor.effect) return "Efek: -";
+        const chance = Math.round(armor.effect.chance * 100);
+        return `Efek: ${armor.effect.name} (${chance}%)`;
+      }
+
+      function getWeaponDamageText(weapon) {
+        if (!weapon) return "Damage: -";
+        return `Damage: ${weapon.damage}`;
+      }
+
       function startPlayerState(state, duration, attackType) {
         if (game.player.state === "dead" && state !== "dead") return;
         game.player.state = state;
@@ -910,6 +960,51 @@ const canvas = document.getElementById("gameCanvas");
         }
       }
 
+      function applyArmorEffect(enemy) {
+        if (!game.player) return;
+        if (!enemy || enemy.state === "dead" || enemy.state === "eaten") return;
+        const armor = armorOptions[game.player.armorIndex];
+        const effect = armor && armor.effect ? armor.effect : null;
+        if (!effect) return;
+        if (Math.random() > effect.chance) return;
+        const now = performance.now() / 1000;
+        if (effect.type === "freeze") {
+          enemy.freezeUntil = Math.max(enemy.freezeUntil || 0, now + effect.duration);
+          return;
+        }
+        if (effect.type === "stun") {
+          enemy.stunUntil = Math.max(enemy.stunUntil || 0, now + effect.duration);
+          return;
+        }
+        if (effect.type === "slow") {
+          enemy.slowUntil = Math.max(enemy.slowUntil || 0, now + effect.duration);
+          enemy.slowFactor = Math.min(enemy.slowFactor || 1, effect.slowFactor || 0.6);
+          return;
+        }
+        if (effect.type === "burn") {
+          enemy.dotUntil = Math.max(enemy.dotUntil || 0, now + effect.duration);
+          enemy.dotInterval = effect.dotInterval || 0.5;
+          enemy.dotDamage = Math.max(enemy.dotDamage || 0, effect.dotDamage || 1);
+          enemy.dotTimer = enemy.dotTimer || 0;
+          return;
+        }
+        if (effect.type === "knockback") {
+          const limit = boardOffsetY + boardHeight + 24;
+          enemy.y = Math.min(enemy.y + (effect.distance || 16), limit);
+          return;
+        }
+        if (effect.type === "lifesteal") {
+          const heal = effect.heal || 0;
+          if (heal > 0) {
+            game.player.hp = Math.min(game.player.maxHp, game.player.hp + heal);
+          }
+          return;
+        }
+        if (effect.type === "bonusDamage") {
+          applyEnemyDamage(enemy, effect.extraDamage || 2);
+        }
+      }
+
       function performMeleeAttack(weapon, angle) {
         const originX = game.player.x;
         const originY = game.player.y;
@@ -926,6 +1021,7 @@ const canvas = document.getElementById("gameCanvas");
           const dir = Math.atan2(dy, dx);
           if (angleDiff(dir, angle) > arc / 2) return;
           applyEnemyDamage(enemy, damage);
+          applyArmorEffect(enemy);
         });
         game.effects.push({
           type: "slash",
@@ -949,6 +1045,9 @@ const canvas = document.getElementById("gameCanvas");
         const vy = Math.sin(angle) * weapon.speed;
         const damage =
           weapon.damage * (1 + game.bonuses.playerDamage + game.skills.combat * 0.03);
+        const spriteSrc = weapon.id === "panah"
+          ? arrowProjectileSprite
+          : weapon.projectileSrc || weapon.icon;
         game.projectiles.push({
           x: originX,
           y: originY,
@@ -956,7 +1055,7 @@ const canvas = document.getElementById("gameCanvas");
           vy,
           damage,
           radius: Math.max(8, Math.round((weapon.projectileSize || 18) * 0.45)),
-          spriteSrc: weapon.projectileSrc || weapon.icon,
+          spriteSrc,
           size: weapon.projectileSize || 18,
           hidden: Boolean(weapon.projectileHidden),
           rotation: angle,
@@ -1013,6 +1112,9 @@ const canvas = document.getElementById("gameCanvas");
           } else {
             ui.armorPrice.textContent = "Harga: Gratis";
           }
+        }
+        if (ui.armorEffect) {
+          ui.armorEffect.textContent = getArmorEffectText(armor);
         }
         if (ui.armorPreview) {
           if (armor && armor.src) {
@@ -1071,6 +1173,9 @@ const canvas = document.getElementById("gameCanvas");
             ui.weaponPrice.textContent = "Harga: -";
           }
         }
+        if (ui.weaponDamage) {
+          ui.weaponDamage.textContent = getWeaponDamageText(weapon);
+        }
         if (ui.weaponPreview) {
           if (weapon && weapon.icon) {
             ui.weaponPreview.src = weapon.icon;
@@ -1113,6 +1218,9 @@ const canvas = document.getElementById("gameCanvas");
             shopUi.armorPrice.textContent = "Harga: Gratis";
           }
         }
+        if (shopUi.armorEffect) {
+          shopUi.armorEffect.textContent = getArmorEffectText(armor);
+        }
         if (shopUi.armorPreview) {
           if (armor && armor.src) {
             shopUi.armorPreview.src = armor.src;
@@ -1151,6 +1259,9 @@ const canvas = document.getElementById("gameCanvas");
           } else {
             shopUi.weaponPrice.textContent = "Harga: -";
           }
+        }
+        if (shopUi.weaponDamage) {
+          shopUi.weaponDamage.textContent = getWeaponDamageText(weapon);
         }
         if (shopUi.weaponPreview) {
           if (weapon && weapon.icon) {
@@ -1327,6 +1438,9 @@ const canvas = document.getElementById("gameCanvas");
         if (!armor || !game.armorOwned[armor.id]) return;
         if (game.player) {
           game.player.armorIndex = index;
+        }
+        if (armor.effect) {
+          log(`Efek armor: ${armor.effect.name}.`);
         }
         updateArmorUI();
       }
@@ -2257,7 +2371,7 @@ const canvas = document.getElementById("gameCanvas");
         ui.trophyValue.textContent = game.trophies;
         ui.levelValue.textContent = game.level;
         ui.weatherValue.textContent = game.weather.name;
-        ui.sceneTag.textContent = `${sceneTitles[game.phase]} - ${mapSequence[game.mapIndex].label}`;
+        ui.sceneTag.textContent = `Level ${game.level} Wave ${game.waveInMap}`;
         ui.coinsValue.textContent = game.coins;
         ui.materialValue.textContent = game.materials;
         ui.seedMageValue.textContent = game.seeds.mage;
@@ -2274,6 +2388,11 @@ const canvas = document.getElementById("gameCanvas");
         const canAdvance = canAdvanceToNextWave();
         ui.nextDay.disabled = !canAdvance;
         ui.nextDay.classList.toggle("hidden", !canAdvance);
+        if (ui.startDefenseQuick) {
+          const showStartQuick = game.phase === "persiapan";
+          ui.startDefenseQuick.disabled = !showStartQuick;
+          ui.startDefenseQuick.classList.toggle("hidden", !showStartQuick);
+        }
         if (ui.toUpgradeAction) {
           const showUpgradeAction = game.phase === "eksplorasi";
           ui.toUpgradeAction.disabled = !showUpgradeAction;
@@ -2470,6 +2589,20 @@ const canvas = document.getElementById("gameCanvas");
             }
             return;
           }
+          if (enemy.dotUntil && now < enemy.dotUntil && enemy.dotInterval && enemy.dotDamage) {
+            enemy.dotTimer = (enemy.dotTimer || 0) + dt;
+            while (enemy.dotTimer >= enemy.dotInterval) {
+              enemy.dotTimer -= enemy.dotInterval;
+              applyEnemyDamage(enemy, enemy.dotDamage);
+              if (enemy.state === "dead") return;
+            }
+          } else if (enemy.dotUntil && now >= enemy.dotUntil) {
+            enemy.dotTimer = 0;
+          }
+          if (now < (enemy.freezeUntil || 0) || now < (enemy.stunUntil || 0)) {
+            enemy.moving = false;
+            return;
+          }
           const targetPlant = findBlockingPlant(enemy);
           if (targetPlant) {
             enemy.moving = false;
@@ -2553,6 +2686,7 @@ const canvas = document.getElementById("gameCanvas");
             const dy = enemy.y - shot.y;
             if (dx * dx + dy * dy <= shot.radius * shot.radius * 9) {
               applyEnemyDamage(enemy, shot.damage);
+              applyArmorEffect(enemy);
               shot.hit = true;
               break;
             }
@@ -2741,6 +2875,12 @@ const canvas = document.getElementById("gameCanvas");
           color: def.color,
           slowUntil: 0,
           slowFactor: 1,
+          freezeUntil: 0,
+          stunUntil: 0,
+          dotUntil: 0,
+          dotInterval: 0,
+          dotDamage: 0,
+          dotTimer: 0,
           attackRate: scaling.attackRate,
           attackCooldown: scaling.attackRate * 0.5,
           reachedCore: false,
@@ -3595,6 +3735,7 @@ const canvas = document.getElementById("gameCanvas");
 
       function resetGame() {
         updateBoardLayout();
+        assignArmorEffects();
         game.time = 0;
         game.mapIndex = 0;
         game.waveInMap = 1;
@@ -3733,6 +3874,7 @@ const canvas = document.getElementById("gameCanvas");
                 <div>
                   <div id="shopArmorName" class="armor-name">Armor</div>
                   <div id="shopArmorPrice" class="armor-price">Harga: -</div>
+                  <div id="shopArmorEffect" class="armor-effect">Efek: -</div>
                 </div>
               </div>
               <div class="button-row">
@@ -3750,6 +3892,7 @@ const canvas = document.getElementById("gameCanvas");
                 <div>
                   <div id="shopWeaponName" class="armor-name">Senjata</div>
                   <div id="shopWeaponPrice" class="armor-price">Harga: -</div>
+                  <div id="shopWeaponDamage" class="weapon-damage">Damage: -</div>
                 </div>
               </div>
               <div class="button-row">
@@ -3768,12 +3911,14 @@ const canvas = document.getElementById("gameCanvas");
           armorName: document.getElementById("shopArmorName"),
           armorPreview: document.getElementById("shopArmorPreview"),
           armorPrice: document.getElementById("shopArmorPrice"),
+          armorEffect: document.getElementById("shopArmorEffect"),
           armorPrev: document.getElementById("shopArmorPrev"),
           armorNext: document.getElementById("shopArmorNext"),
           armorAction: document.getElementById("shopArmorAction"),
           weaponName: document.getElementById("shopWeaponName"),
           weaponPreview: document.getElementById("shopWeaponPreview"),
           weaponPrice: document.getElementById("shopWeaponPrice"),
+          weaponDamage: document.getElementById("shopWeaponDamage"),
           weaponPrev: document.getElementById("shopWeaponPrev"),
           weaponNext: document.getElementById("shopWeaponNext"),
           weaponAction: document.getElementById("shopWeaponAction"),
@@ -3862,6 +4007,14 @@ const canvas = document.getElementById("gameCanvas");
       ui.startDefense.addEventListener("click", startDefense);
       if (ui.startDefenseAlt) {
         ui.startDefenseAlt.addEventListener("click", () => {
+          if (!hasStarted) {
+            startGame();
+          }
+          startDefense();
+        });
+      }
+      if (ui.startDefenseQuick) {
+        ui.startDefenseQuick.addEventListener("click", () => {
           if (!hasStarted) {
             startGame();
           }
