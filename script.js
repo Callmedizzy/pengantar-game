@@ -58,6 +58,7 @@ const canvas = document.getElementById("gameCanvas");
         pauseButton: document.getElementById("pauseButton"),
         inventoryToggle: document.getElementById("inventoryToggle"),
         tasPanel: document.getElementById("tasPanel"),
+        toUpgradeAction: document.getElementById("toUpgradeAction"),
         miniMapButton: document.getElementById("miniMapButton"),
       };
 
@@ -104,12 +105,14 @@ const canvas = document.getElementById("gameCanvas");
       const phaseLabels = {
         persiapan: "Persiapan",
         pertahanan: "Pertahanan",
+        eksplorasi: "Eksplorasi",
         upgrade: "Peningkatan",
       };
 
       const sceneTitles = {
         persiapan: "Hidup & Persiapan",
         pertahanan: "Pengepungan",
+        eksplorasi: "Eksplorasi",
         upgrade: "Peningkatan Desa",
       };
 
@@ -360,6 +363,22 @@ const canvas = document.getElementById("gameCanvas");
           src: "assets/Mata Uang/Ruby.png",
           unitValue: 1,
         },
+      ];
+
+      const explorationDropConfig = {
+        baseDrops: 4,
+        perLevel: 1,
+        perWave: 1,
+        maxDrops: 12,
+        seedChance: 0.45,
+        pickupRadius: 22,
+        ttl: 30,
+      };
+
+      const coinDropTable = [
+        { id: "koin", weight: 0.6, value: 6 },
+        { id: "berlian", weight: 0.25, value: 10 },
+        { id: "ruby", weight: 0.15, value: 14 },
       ];
 
       const relicPool = [
@@ -753,6 +772,7 @@ const canvas = document.getElementById("gameCanvas");
         enemies: [],
         projectiles: [],
         effects: [],
+        drops: [],
         waveTimer: 0,
         spawnQueue: [],
         kills: 0,
@@ -1173,6 +1193,8 @@ const canvas = document.getElementById("gameCanvas");
             ui.seedBarTitle.textContent = "Tas";
           } else if (game.phase === "pertahanan") {
             ui.seedBarTitle.textContent = "Tas (Pertahanan)";
+          } else if (game.phase === "eksplorasi") {
+            ui.seedBarTitle.textContent = "Tas (Eksplorasi)";
           } else {
             ui.seedBarTitle.textContent = "Tas (Peningkatan)";
           }
@@ -1366,6 +1388,134 @@ const canvas = document.getElementById("gameCanvas");
         Object.keys(base).forEach((type) => {
           game.seeds[type] += base[type] + game.bonuses.dailySeedBonus;
         });
+      }
+
+      function pickWeighted(items) {
+        const total = items.reduce((sum, item) => sum + item.weight, 0);
+        if (total <= 0) return items[0];
+        let roll = Math.random() * total;
+        for (const item of items) {
+          roll -= item.weight;
+          if (roll <= 0) return item;
+        }
+        return items[items.length - 1];
+      }
+
+      function getDropBounds() {
+        const padding = cellSize * 0.2;
+        return {
+          minX: gridStartX + padding,
+          maxX: gridEndX - padding,
+          minY: boardOffsetY + padding,
+          maxY: boardOffsetY + boardHeight - padding,
+        };
+      }
+
+      function getRandomDropPosition() {
+        const bounds = getDropBounds();
+        const x = bounds.minX + Math.random() * (bounds.maxX - bounds.minX);
+        const y = bounds.minY + Math.random() * (bounds.maxY - bounds.minY);
+        return { x, y };
+      }
+
+      function spawnSeedDrop() {
+        const seedTypes = Object.keys(plantDefs);
+        if (!seedTypes.length) return;
+        const seedType = seedTypes[randRange(0, seedTypes.length - 1)];
+        const def = plantDefs[seedType];
+        const pos = getRandomDropPosition();
+        game.drops.push({
+          kind: "seed",
+          id: seedType,
+          name: def.name,
+          value: 1,
+          x: pos.x,
+          y: pos.y,
+          ttl: explorationDropConfig.ttl,
+          bob: Math.random() * Math.PI * 2,
+          src: def.sprite,
+        });
+      }
+
+      function spawnCoinDrop() {
+        const pick = pickWeighted(coinDropTable);
+        const coin = coinAssets.find((item) => item.id === pick.id);
+        const pos = getRandomDropPosition();
+        game.drops.push({
+          kind: "coin",
+          id: pick.id,
+          name: coin ? coin.name : "Koin",
+          value: pick.value,
+          x: pos.x,
+          y: pos.y,
+          ttl: explorationDropConfig.ttl,
+          bob: Math.random() * Math.PI * 2,
+          src: coin ? coin.src : null,
+        });
+      }
+
+      function spawnExplorationDrop() {
+        if (Math.random() < explorationDropConfig.seedChance) {
+          spawnSeedDrop();
+        } else {
+          spawnCoinDrop();
+        }
+      }
+
+      function startExplorationDrops() {
+        game.drops = [];
+        const total = Math.min(
+          explorationDropConfig.maxDrops,
+          explorationDropConfig.baseDrops +
+            game.level * explorationDropConfig.perLevel +
+            game.waveInMap * explorationDropConfig.perWave
+        );
+        for (let i = 0; i < total; i += 1) {
+          spawnExplorationDrop();
+        }
+      }
+
+      function clearExplorationDrops() {
+        game.drops = [];
+      }
+
+      function startExploration() {
+        game.phase = "eksplorasi";
+        startExplorationDrops();
+      }
+
+      function collectDrop(drop) {
+        if (drop.kind === "seed") {
+          const current = game.seeds[drop.id] || 0;
+          game.seeds[drop.id] = current + drop.value;
+          log(`Mendapat benih ${drop.name} +${drop.value}.`);
+        } else if (drop.kind === "coin") {
+          const bonus = 1 + game.bonuses.coinsBonus + game.weather.coinsBonus;
+          const gain = Math.max(1, Math.round(drop.value * bonus));
+          game.coins += gain;
+          if (game.lootTotals && drop.id) {
+            game.lootTotals[drop.id] = (game.lootTotals[drop.id] || 0) + 1;
+          }
+          log(`Menemukan ${drop.name} +${gain} koin.`);
+        }
+        updateUI();
+      }
+
+      function updateDrops(dt) {
+        if (game.phase !== "eksplorasi") return;
+        if (!game.drops.length) return;
+        const radius = explorationDropConfig.pickupRadius;
+        const radiusSq = radius * radius;
+        game.drops.forEach((drop) => {
+          drop.ttl -= dt;
+          const dx = game.player.x - drop.x;
+          const dy = game.player.y - drop.y;
+          if (dx * dx + dy * dy <= radiusSq) {
+            drop.collected = true;
+            collectDrop(drop);
+          }
+        });
+        game.drops = game.drops.filter((drop) => drop.ttl > 0 && !drop.collected);
       }
 
       function buildMapData(mapIndex) {
@@ -1574,6 +1724,7 @@ const canvas = document.getElementById("gameCanvas");
           startGame();
         }
         if (game.phase !== "persiapan") return;
+        clearExplorationDrops();
         game.phase = "pertahanan";
         const maxWaves = getMaxWavesForLevel(game.level);
         if (game.waveInMap > maxWaves) {
@@ -1655,7 +1806,6 @@ const canvas = document.getElementById("gameCanvas");
 
       function endDefense() {
         if (game.phase !== "pertahanan") return;
-        game.phase = "upgrade";
         const harvest = Math.round(
           game.plants.length * (2 + game.skills.farming * 0.4)
         );
@@ -1666,7 +1816,8 @@ const canvas = document.getElementById("gameCanvas");
         game.trophies += 1;
         grantDailySeeds();
         gainXp(10 + game.waveInMap * 4 + game.kills);
-        log("Pertahanan sukses. Waktunya peningkatan.");
+        startExploration();
+        log("Pertahanan sukses. Waktunya eksplorasi.");
         if (game.waveInMap >= getMaxWavesForLevel(game.level)) {
           log("Gelombang terakhir di peta ini selesai. Lanjutkan ke peta berikutnya.");
         }
@@ -1691,6 +1842,7 @@ const canvas = document.getElementById("gameCanvas");
       function openUpgradePhase() {
         if (game.phase === "pertahanan") return;
         game.phase = "upgrade";
+        clearExplorationDrops();
         log("Masuk fase peningkatan dan bertani.");
         updateUI();
       }
@@ -1701,6 +1853,7 @@ const canvas = document.getElementById("gameCanvas");
 
       function nextDay() {
         if (!canAdvanceToNextWave()) return;
+        clearExplorationDrops();
         const completedMap = game.waveInMap >= getMaxWavesForLevel(game.level);
         if (completedMap) {
           game.waveInMap = 1;
@@ -1842,6 +1995,7 @@ const canvas = document.getElementById("gameCanvas");
           return;
         }
         toggleInventoryPanel(false);
+        const templateHtml = buildLevelWaveTemplate();
         const body = `
           <div class="map-browser">
             <div class="map-grid">
@@ -1855,6 +2009,7 @@ const canvas = document.getElementById("gameCanvas");
                     data-map-index="${index}"
                     type="button"
                     aria-disabled="${locked ? "true" : "false"}"
+                    aria-expanded="${selected ? "true" : "false"}"
                   >
                     <div class="map-thumb">
                       <img src="${map.background}" alt="Peta ${map.label}" loading="lazy" />
@@ -1866,11 +2021,16 @@ const canvas = document.getElementById("gameCanvas");
                       ` : ""}
                     </div>
                     <div class="map-label">${map.label}</div>
+                    <div class="map-detail">
+                      <div class="map-detail-title">${map.label}</div>
+                      <div class="map-detail-sub">${map.weather.desc}</div>
+                      ${locked ? `<div class="map-detail-lock">Terkunci: butuh level ${unlockLevel}.</div>` : ""}
+                      <div class="map-level-list">${templateHtml}</div>
+                    </div>
                   </button>
                 `;
               }).join("")}
             </div>
-            <div class="map-info" id="mapInfo"></div>
           </div>
         `;
         showOverlay(
@@ -1881,43 +2041,32 @@ const canvas = document.getElementById("gameCanvas");
         );
         setMiniMapButtonExpanded(true);
         setPauseButtonExpanded(false);
-
-        const infoEl = ui.overlayBody.querySelector("#mapInfo");
         const mapButtons = Array.from(ui.overlayBody.querySelectorAll(".map-card"));
-        const templateHtml = buildLevelWaveTemplate();
-        const renderInfo = (mapIndex) => {
-          const map = mapSequence[mapIndex];
-          if (!map || !infoEl) return;
-          const unlockLevel = map.unlockLevel || 1;
-          const locked = game.level < unlockLevel;
-          infoEl.innerHTML = `
-            <div class="map-info-title">${map.label}</div>
-            <div class="map-info-sub">${map.weather.desc}</div>
-            ${locked ? `<div class="map-info-lock">Terkunci: butuh level ${unlockLevel}.</div>` : ""}
-            <div class="map-level-list">${templateHtml}</div>
-          `;
+        let selectedIndex = game.mapIndex;
+        const syncSelection = () => {
+          mapButtons.forEach((item) => {
+            const index = Number.parseInt(item.dataset.mapIndex, 10);
+            const isSelected = index === selectedIndex;
+            item.classList.toggle("selected", isSelected);
+            item.setAttribute("aria-expanded", isSelected ? "true" : "false");
+          });
         };
-
-        renderInfo(game.mapIndex);
+        syncSelection();
         mapButtons.forEach((button) => {
           button.addEventListener("click", () => {
             const index = Number.parseInt(button.dataset.mapIndex, 10);
-            renderInfo(index);
             if (Number.isNaN(index)) return;
+            selectedIndex = index;
+            syncSelection();
             const map = mapSequence[index];
             const unlockLevel = map?.unlockLevel || 1;
             if (game.level < unlockLevel) {
               log(`Peta terkunci. Capai level ${unlockLevel} untuk membuka.`);
               return;
             }
-            if (setMapIndex(index)) {
-              mapButtons.forEach((item) => {
-                item.classList.toggle(
-                  "selected",
-                  Number.parseInt(item.dataset.mapIndex, 10) === game.mapIndex
-                );
-              });
-            }
+            setMapIndex(index);
+            selectedIndex = game.mapIndex;
+            syncSelection();
           });
         });
       }
@@ -2105,6 +2254,11 @@ const canvas = document.getElementById("gameCanvas");
         const canAdvance = canAdvanceToNextWave();
         ui.nextDay.disabled = !canAdvance;
         ui.nextDay.classList.toggle("hidden", !canAdvance);
+        if (ui.toUpgradeAction) {
+          const showUpgradeAction = game.phase === "eksplorasi";
+          ui.toUpgradeAction.disabled = !showUpgradeAction;
+          ui.toUpgradeAction.classList.toggle("hidden", !showUpgradeAction);
+        }
         ui.upgradePanel.classList.toggle("hidden", game.phase !== "upgrade");
 
         if (game.phase === "persiapan") {
@@ -2112,6 +2266,8 @@ const canvas = document.getElementById("gameCanvas");
             "Siapkan tanaman dan formasi sebelum gelombang musuh datang.";
         } else if (game.phase === "pertahanan") {
           ui.phaseDesc.textContent = "Pertahankan Inti Desa dari serangan monster.";
+        } else if (game.phase === "eksplorasi") {
+          ui.phaseDesc.textContent = "Eksplorasi ladang dan kumpulkan item jatuh.";
         } else if (game.phase === "upgrade") {
           ui.phaseDesc.textContent = "Tingkatkan desa, senjata, dan tanaman.";
         }
@@ -2438,7 +2594,8 @@ const canvas = document.getElementById("gameCanvas");
         }
         const canMove =
           game.phase === "pertahanan" ||
-          game.phase === "persiapan";
+          game.phase === "persiapan" ||
+          game.phase === "eksplorasi";
         if (!canMove) {
           player.moving = false;
           player.animTime += dt * 0.35;
@@ -2506,13 +2663,18 @@ const canvas = document.getElementById("gameCanvas");
           updatePlants(dt);
           updateEnemies(dt);
           updateProjectiles(dt);
-          updateEffects(dt);
           cleanupEnemies();
 
           if (!game.spawnQueue.length && !game.enemies.length) {
             endDefense();
           }
         }
+
+        if (game.phase === "eksplorasi") {
+          updateDrops(dt);
+        }
+
+        updateEffects(dt);
 
         if (!game.paused && (game.core.hp <= 0 || game.lives <= 0)) {
           showGameOver();
@@ -3007,6 +3169,45 @@ const canvas = document.getElementById("gameCanvas");
         });
       }
 
+      function drawDrops() {
+        if (!game.drops.length) return;
+        const size = Math.max(14, Math.round(cellSize * 0.4));
+        game.drops.forEach((drop) => {
+          const bob = Math.sin(game.time * 3 + drop.bob) * 3;
+          const alpha = drop.ttl < 3 ? clamp(drop.ttl / 3, 0, 1) : 1;
+          ctx.save();
+          ctx.globalAlpha = alpha;
+          ctx.fillStyle = "rgba(0,0,0,0.25)";
+          ctx.beginPath();
+          ctx.ellipse(
+            drop.x,
+            drop.y + 10 + bob,
+            size * 0.35,
+            size * 0.16,
+            0,
+            0,
+            Math.PI * 2
+          );
+          ctx.fill();
+          const img = drop.src ? getSpriteImage(drop.src) : null;
+          if (img) {
+            ctx.drawImage(
+              img,
+              Math.round(drop.x - size / 2),
+              Math.round(drop.y - size / 2 + bob),
+              size,
+              size
+            );
+          } else {
+            ctx.fillStyle = drop.kind === "seed" ? "#6cc070" : "#f6c453";
+            ctx.beginPath();
+            ctx.arc(drop.x, drop.y + bob, size * 0.25, 0, Math.PI * 2);
+            ctx.fill();
+          }
+          ctx.restore();
+        });
+      }
+
 
       function drawEnemyBody(enemy) {
         const x = enemy.x;
@@ -3343,6 +3544,7 @@ const canvas = document.getElementById("gameCanvas");
         drawCore();
         drawPlants();
         drawEnemies();
+        drawDrops();
         drawPlayer();
         drawProjectiles();
         drawEffects();
@@ -3399,6 +3601,7 @@ const canvas = document.getElementById("gameCanvas");
         game.enemies = [];
         game.projectiles = [];
         game.effects = [];
+        game.drops = [];
         game.spawnQueue = [];
         game.waveTimer = 0;
         game.kills = 0;
@@ -3638,6 +3841,9 @@ const canvas = document.getElementById("gameCanvas");
         });
       }
       ui.toUpgrade.addEventListener("click", openUpgradePhase);
+      if (ui.toUpgradeAction) {
+        ui.toUpgradeAction.addEventListener("click", openUpgradePhase);
+      }
       ui.nextDay.addEventListener("click", nextDay);
       ui.resetGame.addEventListener("click", resetGame);
       if (startButton) {

@@ -810,7 +810,7 @@
 
       .map-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+        grid-template-columns: repeat(2, minmax(120px, 1fr));
         gap: 12px;
       }
 
@@ -821,6 +821,8 @@
         background: rgba(255, 255, 255, 0.7);
         text-align: left;
         box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6);
+        display: grid;
+        gap: 8px;
       }
 
       .map-card.selected {
@@ -887,33 +889,37 @@
       }
 
       .map-label {
-        margin-top: 6px;
+        margin-top: 2px;
         font-weight: 700;
         color: #5b3518;
         font-size: 0.85rem;
       }
 
-      .map-info {
-        padding: 12px;
+      .map-detail {
+        padding: 10px;
         border-radius: 12px;
         background: rgba(255, 255, 255, 0.8);
         border: 2px solid rgba(123, 74, 36, 0.35);
-        display: grid;
+        display: none;
         gap: 6px;
       }
 
-      .map-info-title {
+      .map-card.selected .map-detail {
+        display: grid;
+      }
+
+      .map-detail-title {
         font-family: "Changa One", "Trebuchet MS", sans-serif;
         font-size: 1.15rem;
         color: #4f2f14;
       }
 
-      .map-info-sub {
+      .map-detail-sub {
         font-size: 0.85rem;
         color: #6b4423;
       }
 
-      .map-info-lock {
+      .map-detail-lock {
         font-weight: 700;
         color: #7b4a24;
       }
