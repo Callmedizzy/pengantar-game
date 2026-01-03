@@ -841,6 +841,16 @@
         overflow: hidden;
         border: 2px solid rgba(123, 74, 36, 0.35);
         background: #fffaf2;
+        aspect-ratio: 4 / 3;
+        width: 100%;
+        background-size: cover;
+        background-position: center;
+        background-repeat: no-repeat;
+        image-rendering: pixelated;
+      }
+
+      .map-thumb.sprite {
+        background-size: 200% 200%;
       }
 
       .map-thumb img {
@@ -926,9 +936,46 @@
 
       .map-level-list {
         display: grid;
-        gap: 4px;
+        gap: 6px;
         font-size: 0.82rem;
         color: #5b3518;
+      }
+
+      .map-level-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+      }
+
+      .map-level-label {
+        font-weight: 700;
+      }
+
+      .map-level-stars {
+        display: flex;
+        gap: 4px;
+        align-items: center;
+      }
+
+      .map-star {
+        display: inline-block;
+        width: 12px;
+        height: 12px;
+        background: linear-gradient(180deg, #ffe8a3 0%, #f1c056 100%);
+        clip-path: polygon(
+          50% 0%,
+          62% 35%,
+          98% 35%,
+          68% 58%,
+          79% 92%,
+          50% 72%,
+          21% 92%,
+          32% 58%,
+          2% 35%,
+          38% 35%
+        );
+        box-shadow: 0 1px 0 rgba(90, 58, 24, 0.6);
       }
 
       .map-preview {

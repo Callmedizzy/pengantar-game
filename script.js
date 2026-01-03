@@ -408,12 +408,15 @@ const canvas = document.getElementById("gameCanvas");
       const bushTile = { sheet: "vegetation", x: 1, y: 6 };
       const snowBushTile = { sheet: "vegetation", x: 4, y: 24 };
       const rockTile = { sheet: "rocks", x: 1, y: 2 };
+      const mapPreviewSprite = "assets/Map/Semua Map.jpg";
 
       const mapSequence = [
         {
           id: "normal",
           label: "Normal",
           background: "assets/map/normal.png",
+          previewSprite: mapPreviewSprite,
+          previewPosition: "0% 0%",
           focusY: 0.55,
           ground: groundTiles.normal,
           overlay: "none",
@@ -425,6 +428,8 @@ const canvas = document.getElementById("gameCanvas");
           id: "hujan",
           label: "Hujan",
           background: "assets/map/hujan.png",
+          previewSprite: mapPreviewSprite,
+          previewPosition: "100% 0%",
           focusY: 0.55,
           ground: groundTiles.normal,
           overlay: "rain",
@@ -436,6 +441,8 @@ const canvas = document.getElementById("gameCanvas");
           id: "malam",
           label: "Malam",
           background: "assets/map/malam.png",
+          previewSprite: mapPreviewSprite,
+          previewPosition: "0% 100%",
           focusY: 0.55,
           ground: groundTiles.normal,
           overlay: "night",
@@ -447,6 +454,8 @@ const canvas = document.getElementById("gameCanvas");
           id: "salju",
           label: "Salju",
           background: "assets/map/salju.png",
+          previewSprite: mapPreviewSprite,
+          previewPosition: "100% 100%",
           focusY: 0.55,
           ground: groundTiles.snow,
           overlay: "snow",
@@ -699,6 +708,7 @@ const canvas = document.getElementById("gameCanvas");
         });
         mapSequence.forEach((map) => {
           if (map.background) sources.push(map.background);
+          if (map.previewSprite) sources.push(map.previewSprite);
         });
         let loaded = 0;
         const total = sources.length;
@@ -736,6 +746,7 @@ const canvas = document.getElementById("gameCanvas");
       let harvestMode = false;
       let selectedCell = { row: 2, col: 2 };
       let hoverCell = null;
+      const pointer = { x: 0, y: 0, down: false, inside: false };
       const keys = {};
 
       const game = {
@@ -1980,11 +1991,16 @@ const canvas = document.getElementById("gameCanvas");
         const rows = [];
         for (let level = 1; level <= maxSelectableLevel; level += 1) {
           const maxWave = getMaxWavesForLevel(level);
-          const waves = [];
+          const stars = [];
           for (let wave = 1; wave <= maxWave; wave += 1) {
-            waves.push(wave);
+            stars.push('<span class="map-star" aria-hidden="true"></span>');
           }
-          rows.push(`<div class="map-level-row">Level ${level}: Wave ${waves.join(" ")}</div>`);
+          rows.push(`
+            <div class="map-level-row">
+              <div class="map-level-label">Level ${level}</div>
+              <div class="map-level-stars">${stars.join("")}</div>
+            </div>
+          `);
         }
         return rows.join("");
       }
@@ -2003,6 +2019,11 @@ const canvas = document.getElementById("gameCanvas");
                 const unlockLevel = map.unlockLevel || 1;
                 const locked = game.level < unlockLevel;
                 const selected = game.mapIndex === index;
+                const previewSrc = map.previewSprite || map.background;
+                const previewClass = map.previewSprite ? "map-thumb sprite" : "map-thumb";
+                const previewStyle = map.previewSprite
+                  ? `background-image: url('${previewSrc}'); background-position: ${map.previewPosition || "center"};`
+                  : `background-image: url('${previewSrc}');`;
                 return `
                   <button
                     class="map-card${locked ? " locked" : ""}${selected ? " selected" : ""}"
@@ -2011,8 +2032,7 @@ const canvas = document.getElementById("gameCanvas");
                     aria-disabled="${locked ? "true" : "false"}"
                     aria-expanded="${selected ? "true" : "false"}"
                   >
-                    <div class="map-thumb">
-                      <img src="${map.background}" alt="Peta ${map.label}" loading="lazy" />
+                    <div class="${previewClass}" style="${previewStyle}">
                       ${locked ? `
                         <div class="map-lock">
                           <div class="lock-icon"></div>
@@ -2608,7 +2628,11 @@ const canvas = document.getElementById("gameCanvas");
         }
         let speed = player.speed;
         const now = performance.now() / 1000;
-        if (now < player.dodgeUntil) {
+        const dodging = now < player.dodgeUntil;
+        if (keys.shift && !dodging) {
+          speed *= 1.25;
+        }
+        if (dodging) {
           speed *= 1.8;
         }
 
@@ -2653,6 +2677,9 @@ const canvas = document.getElementById("gameCanvas");
         game.time += dt;
         updatePlayer(dt);
         syncSelectionToPlayer();
+        if (pointer.down && pointer.inside && game.phase === "pertahanan") {
+          shootAt(pointer.x, pointer.y);
+        }
 
         if (game.phase === "pertahanan") {
           game.waveTimer += dt;
@@ -3670,9 +3697,10 @@ const canvas = document.getElementById("gameCanvas");
               <div class="control-list">
                 <div>WASD / Panah: Gerak petani (kursor tanam mengikuti posisi)</div>
                 <div>F: Tanam / panen di kursor</div>
-                <div>Klik kiri: Serang musuh</div>
+                <div>Klik kiri (tahan): Serang musuh</div>
                 <div>Roda mouse: Ganti senjata</div>
                 <div>Spasi: Menghindar singkat</div>
+                <div>Shift: Lari</div>
                 <div>Enter: Mulai pertahanan</div>
                 <div>E: Menu karakter</div>
                 <div>ESC: Jeda</div>
@@ -3980,46 +4008,62 @@ const canvas = document.getElementById("gameCanvas");
         }
       });
 
-      function handleCanvasClick(event) {
+      function getCanvasCoords(event) {
         const rect = canvas.getBoundingClientRect();
         const scaleX = canvas.width / rect.width;
         const scaleY = canvas.height / rect.height;
-        const x = (event.clientX - rect.left) * scaleX;
-        const y = (event.clientY - rect.top) * scaleY;
+        return {
+          x: (event.clientX - rect.left) * scaleX,
+          y: (event.clientY - rect.top) * scaleY,
+        };
+      }
+
+      function handleCanvasClick(event) {
         if (!hasStarted) return;
-
-        if (game.phase === "pertahanan") {
-          shootAt(x, y);
-          return;
-        }
-
-        if (game.phase === "persiapan") {
-          const cell = getCellAt(x, y);
-          if (cell) {
-            selectedCell = cell;
-            placePlant(cell.row, cell.col);
-          }
+        if (game.phase !== "persiapan") return;
+        const { x, y } = getCanvasCoords(event);
+        const cell = getCellAt(x, y);
+        if (cell) {
+          selectedCell = cell;
+          placePlant(cell.row, cell.col);
         }
       }
 
       canvas.addEventListener("mousemove", (event) => {
-        const rect = canvas.getBoundingClientRect();
-        const scaleX = canvas.width / rect.width;
-        const scaleY = canvas.height / rect.height;
-        const x = (event.clientX - rect.left) * scaleX;
-        const y = (event.clientY - rect.top) * scaleY;
+        const { x, y } = getCanvasCoords(event);
+        pointer.x = x;
+        pointer.y = y;
+        pointer.inside = true;
         hoverCell = getCellAt(x, y);
       });
 
       canvas.addEventListener("mouseleave", () => {
         hoverCell = null;
+        pointer.inside = false;
+        pointer.down = false;
+      });
+
+      canvas.addEventListener("mousedown", (event) => {
+        if (event.button !== 0) return;
+        const { x, y } = getCanvasCoords(event);
+        pointer.x = x;
+        pointer.y = y;
+        pointer.down = true;
+        pointer.inside = true;
+        if (game.phase === "pertahanan") {
+          shootAt(pointer.x, pointer.y);
+        }
+      });
+
+      window.addEventListener("mouseup", () => {
+        pointer.down = false;
       });
 
       canvas.addEventListener("click", handleCanvasClick);
       canvas.addEventListener(
         "wheel",
         (event) => {
-          if (game.phase !== "pertahanan") return;
+          if (!hasStarted || game.paused) return;
           event.preventDefault();
           const dir = event.deltaY > 0 ? 1 : -1;
           const nextIndex = getNextOwnedWeaponIndex(game.player.weaponIndex, dir);
@@ -4073,6 +4117,10 @@ const canvas = document.getElementById("gameCanvas");
           }
           return;
         }
+        if (event.code === "ShiftLeft" || event.code === "ShiftRight") {
+          keys.shift = true;
+          return;
+        }
         if (game.paused) return;
         if (key === "enter" && game.phase === "persiapan") {
           startDefense();
@@ -4089,7 +4137,7 @@ const canvas = document.getElementById("gameCanvas");
           const now = performance.now() / 1000;
           if (game.phase === "pertahanan" && now > game.player.dodgeCooldownUntil) {
             game.player.dodgeUntil = now + 0.4;
-            game.player.dodgeCooldownUntil = now + 1.6;
+            game.player.dodgeCooldownUntil = now + 1.0;
           }
           event.preventDefault();
           return;
@@ -4106,6 +4154,10 @@ const canvas = document.getElementById("gameCanvas");
       });
 
       window.addEventListener("keyup", (event) => {
+        if (event.code === "ShiftLeft" || event.code === "ShiftRight") {
+          keys.shift = false;
+          return;
+        }
         const moveKey = getMoveKey(event);
         if (moveKey) {
           keys[moveKey] = false;
@@ -4118,6 +4170,9 @@ const canvas = document.getElementById("gameCanvas");
         keys.a = false;
         keys.s = false;
         keys.d = false;
+        keys.shift = false;
+        pointer.down = false;
+        pointer.inside = false;
       });
 
       let lastTime = performance.now();
