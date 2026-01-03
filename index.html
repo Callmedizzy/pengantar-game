@@ -113,15 +113,39 @@
                   <img src="assets/Tumbuhan/Kucing.png" alt="Benih Kucing" />
                   <span class="seed-count" data-seed-count="slow">0</span>
                 </button>
-                <button class="seed-slot" type="button" data-seed="heal">
-                  <img src="assets/Tumbuhan/Pemakan.png" alt="Benih Pemakan" />
-                  <span class="seed-count" data-seed-count="heal">0</span>
-                </button>
                 <button class="seed-slot" type="button" data-seed="buff">
                   <img src="assets/Tumbuhan/Perisai.png" alt="Benih Perisai" />
                   <span class="seed-count" data-seed-count="buff">0</span>
                 </button>
+                <button class="seed-slot" type="button" data-seed="heal">
+                  <img src="assets/Tumbuhan/Pemakan.png" alt="Benih Pemakan" />
+                  <span class="seed-count" data-seed-count="heal">0</span>
+                </button>
+                <button
+                  class="seed-slot"
+                  id="coinSlot"
+                  type="button"
+                  aria-label="Koin"
+                  aria-haspopup="true"
+                  aria-expanded="false"
+                >
+                  <img src="assets/Logo/Uang.png" alt="" aria-hidden="true" />
+                </button>
+                <button class="seed-slot" type="button" aria-label="Tas" aria-disabled="true">
+                  <img src="assets/Logo/Tas.png" alt="" aria-hidden="true" />
+                </button>
+                <button
+                  class="seed-slot shop-slot"
+                  id="shopSlot"
+                  type="button"
+                  aria-label="Toko"
+                  aria-haspopup="dialog"
+                  aria-expanded="false"
+                >
+                  <img src="assets/Logo/Toko.png" alt="" aria-hidden="true" />
+                </button>
               </div>
+              <div class="coin-menu" id="coinMenu"></div>
             </div>
           </div>
           <div class="board-footer">

@@ -346,14 +346,16 @@
       }
 
       .tas-panel .seed-bar {
-        width: min(100%, 760px);
+        width: fit-content;
+        max-width: 100%;
       }
 
       .tas-panel .seed-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(var(--slot-size), 1fr));
+        grid-template-columns: repeat(3, var(--slot-size));
         gap: 6px;
         overflow: visible;
+        justify-content: center;
       }
 
       .seed-bar-title {
@@ -935,6 +937,7 @@
         border-radius: 0;
         width: auto;
         align-items: center;
+        position: relative;
       }
 
       body.game-only .canvas-wrap {
@@ -955,12 +958,23 @@
         height: min(90vmin, 760px);
       }
 
+      body.game-only .tas-panel {
+        position: absolute;
+        top: calc(20px + (48px + 8px) * 3 + 8px);
+        right: 12px;
+        padding: 0;
+        width: auto;
+        justify-content: flex-start;
+        z-index: 8;
+      }
+
       body.game-only .seed-bar {
         width: min(90vmin, 760px);
       }
 
       body.game-only .tas-panel .seed-bar {
-        width: min(90vmin, 760px);
+        width: fit-content;
+        max-width: min(90vmin, 760px);
         --slot-size: clamp(56px, 9vmin, 70px);
       }
 
@@ -983,6 +997,11 @@
       @media (max-width: 720px) {
         .quick-panel {
           top: 16px;
+          right: 12px;
+        }
+
+        body.game-only .tas-panel {
+          top: calc(16px + (48px + 8px) * 3 + 6px);
           right: 12px;
         }
 

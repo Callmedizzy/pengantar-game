@@ -3844,7 +3844,13 @@ const canvas = document.getElementById("gameCanvas");
         if (ui.tasPanel && ui.inventoryToggle) {
           const clickedPanel = ui.tasPanel.contains(target);
           const clickedToggle = ui.inventoryToggle.contains(target);
-          if (ui.tasPanel.classList.contains("show") && !clickedPanel && !clickedToggle) {
+          const clickedCanvas = canvas ? canvas.contains(target) : false;
+          if (
+            ui.tasPanel.classList.contains("show") &&
+            !clickedPanel &&
+            !clickedToggle &&
+            !clickedCanvas
+          ) {
             toggleInventoryPanel(false);
           }
         }
