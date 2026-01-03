@@ -126,6 +126,7 @@ const canvas = document.getElementById("gameCanvas");
           damage: 7,
           range: 220,
           burstShots: 3,
+          burstInterval: 0.2,
           burstDelay: 1.5,
           hp: 48,
           color: "#3a7bd5",
@@ -137,7 +138,7 @@ const canvas = document.getElementById("gameCanvas");
           cost: { benih: 1, koin: 10 },
           damage: 2,
           range: 200,
-          cooldown: 0.1,
+          cooldown: 0.25,
           hp: 52,
           color: "#2a9d8f",
           sprite: "assets/Tumbuhan/Kucing.png",
@@ -2315,16 +2316,27 @@ const canvas = document.getElementById("gameCanvas");
             effect.life = 0.08;
             effect.dash = [4, 6];
             effect.width = 2;
+          } else if (plant.type === "mage") {
+            effect.ttl = 0.12;
+            effect.life = 0.12;
+            effect.segmented = true;
+            effect.segmentCount = 3;
+            effect.segmentLength = 12;
+            effect.width = 3;
           }
           game.effects.push(effect);
 
           if (plant.type === "mage") {
             const burstTotal = def.burstShots || 1;
+            const burstInterval = def.burstInterval ?? def.cooldown ?? 0;
+            const burstDelay = def.burstDelay || 0;
             plant.burstCount = (plant.burstCount || 0) + 1;
             if (plant.burstCount >= burstTotal) {
               plant.burstCount = 0;
+              plant.cooldown = burstDelay;
+            } else {
+              plant.cooldown = burstInterval;
             }
-            plant.cooldown = def.burstDelay || 0;
             return;
           }
 
@@ -3386,13 +3398,38 @@ const canvas = document.getElementById("gameCanvas");
           ctx.globalAlpha = clamp(effect.ttl / life, 0, 1);
           ctx.lineWidth = effect.width || 2;
           ctx.lineCap = "round";
-          if (effect.dash) {
-            ctx.setLineDash(effect.dash);
+          if (effect.segmented) {
+            const dx = effect.x2 - effect.x1;
+            const dy = effect.y2 - effect.y1;
+            const dist = Math.hypot(dx, dy);
+            if (dist > 0.01) {
+              const ux = dx / dist;
+              const uy = dy / dist;
+              const count = effect.segmentCount || 3;
+              const segLen = effect.segmentLength || Math.max(8, Math.min(18, dist / 6));
+              const spacing = Math.max(0, (dist - count * segLen) / (count + 1));
+              let cursor = spacing;
+              ctx.beginPath();
+              for (let i = 0; i < count; i += 1) {
+                const sx = effect.x1 + ux * cursor;
+                const sy = effect.y1 + uy * cursor;
+                const ex = effect.x1 + ux * (cursor + segLen);
+                const ey = effect.y1 + uy * (cursor + segLen);
+                ctx.moveTo(sx, sy);
+                ctx.lineTo(ex, ey);
+                cursor += segLen + spacing;
+              }
+              ctx.stroke();
+            }
+          } else {
+            if (effect.dash) {
+              ctx.setLineDash(effect.dash);
+            }
+            ctx.beginPath();
+            ctx.moveTo(effect.x1, effect.y1);
+            ctx.lineTo(effect.x2, effect.y2);
+            ctx.stroke();
           }
-          ctx.beginPath();
-          ctx.moveTo(effect.x1, effect.y1);
-          ctx.lineTo(effect.x2, effect.y2);
-          ctx.stroke();
           ctx.restore();
         });
       }
